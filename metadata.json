@@ -1,0 +1,6 @@
+{
+  "name": "Craffle",
+  "description": "Connecting Home Creators with Nearby Customers",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
