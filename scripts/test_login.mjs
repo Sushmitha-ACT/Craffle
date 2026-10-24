@@ -1,1 +1,0 @@
-const test = async () => { try { const res = await fetch('http://localhost:3000/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'admin@craffle.com', password: 'Admin@123' }) }); const data = await res.json(); console.log(data); } catch(e) { console.error(e); } }; test();
