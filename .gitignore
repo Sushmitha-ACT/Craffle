@@ -30,4 +30,6 @@ scratch/
 
 # Build and cache
 .vite/
+__pycache__/
+*.pyc
 

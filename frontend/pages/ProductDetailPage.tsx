@@ -167,13 +167,13 @@ export default function ProductDetailPage({
     <div className="page-enter bg-[var(--bg-secondary)] min-h-screen pb-24 lg:pb-8 animate-fade-in w-full transition-colors duration-200">
       
       {/* Back button */}
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <button onClick={onBack} className="flex items-center gap-2 text-sm font-bold text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors w-fit bg-[var(--panel)] px-4 py-2 rounded-full shadow-sm border border-[var(--border)] cursor-pointer">
-          <ArrowLeft className="w-4 h-4" /> Back to shopping
+      <div className="w-full max-w-7xl mx-auto px-6 lg:px-10 py-6">
+        <button onClick={onBack} className="flex items-center gap-2 text-[15px] font-bold text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors w-fit bg-[var(--panel)] px-5 py-2.5 rounded-full shadow-sm border border-[var(--border)] cursor-pointer">
+          <ArrowLeft className="w-4.5 h-4.5" /> Back to shopping
         </button>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="w-full max-w-7xl mx-auto px-6 lg:px-10">
         
         {/* TOP SECTION: IMAGE & BUY ACTIONS */}
         <div className="bg-[var(--panel)] rounded-[32px] p-6 lg:p-10 shadow-sm border border-[var(--border)] mb-8 transition-colors duration-200">

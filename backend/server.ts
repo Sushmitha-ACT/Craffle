@@ -14,9 +14,12 @@ import wishlistRoutes from './routes/wishlist.routes.js';
 import notificationsRoutes from './routes/notifications.routes.js';
 import supportRoutes from './routes/support.routes.js';
 import geminiRoutes from './routes/gemini.routes.js';
-import debugRoutes from './routes/debug.routes.js';
 import profileRoutes from './routes/profile.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
+import shortsRoutes from './routes/shorts.routes.js';
+import giftDetectiveRoutes from './routes/giftDetective.routes.js';
+import visualSearchRoutes from './routes/visualSearch.routes.js';
+import { visualSearchService } from './services/visualSearchService.js';
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -49,6 +52,10 @@ mongoose.connect(uri)
       if (updateResult.modifiedCount > 0) {
         console.log(`[Startup Sync] Backfilled isApproved=true for ${updateResult.modifiedCount} approved seller(s)`);
       }
+      // Initialize visual search embedding cache from MongoDB
+      visualSearchService.syncCacheFromDatabase().catch(err => {
+        console.warn('[Startup Sync] Visual search cache init warning:', err.message);
+      });
     } catch (err) {
       console.warn('[Startup Sync] Seller sync warning:', err);
     }
@@ -70,9 +77,11 @@ app.use(wishlistRoutes);
 app.use(notificationsRoutes);
 app.use(supportRoutes);
 app.use(geminiRoutes);
-app.use(debugRoutes);
 app.use(profileRoutes);
 app.use(paymentRoutes);
+app.use(shortsRoutes);
+app.use(giftDetectiveRoutes);
+app.use(visualSearchRoutes);
 
 
 // 12. VITE MIDDLEWARE & STATIC ASSET INGRESS

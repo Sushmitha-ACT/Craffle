@@ -335,7 +335,7 @@ export default function CheckoutPage({ items, user, gps, onPlaceOrder, onBack }:
 
   return (
     <div className="w-full min-h-[calc(100vh-160px)] py-8 sm:py-10 px-4 sm:px-6 lg:px-12 page-enter">
-      <div className="max-w-[1180px] mx-auto space-y-8">
+      <div className="max-w-[1360px] mx-auto space-y-8">
         
         {/* TOP BAR / NAVIGATION HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[var(--border)]">

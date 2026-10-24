@@ -560,7 +560,7 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
   const role = user?.role || 'CUSTOMER';
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-colors duration-200">
+    <div className="w-full px-6 lg:px-10 py-8 transition-colors duration-200">
       
       {/* Hidden file input for photo upload */}
       <input
@@ -573,22 +573,22 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
 
       {/* TOP PAGE HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 pb-6 border-b border-[var(--border)]">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-orange-50 text-[#FF6B35] flex items-center justify-center shadow-xs border border-orange-100">
-            <User className="w-6 h-6" />
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-orange-50 text-[#FF6B35] flex items-center justify-center shrink-0 shadow-xs border border-orange-100">
+            <User className="w-7 h-7" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-[var(--text)] tracking-tight">My Profile</h1>
-            <p className="text-xs sm:text-sm text-[var(--text-secondary)] font-medium">Manage your personal information, security, and delivery addresses</p>
+            <h1 className="text-3xl lg:text-4xl font-extrabold text-[var(--text)] tracking-tight">My Profile</h1>
+            <p className="text-[15px] sm:text-[16px] text-[var(--text-secondary)] font-normal mt-1">Manage your personal information, security, and delivery addresses</p>
           </div>
         </div>
 
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
-            className="self-start sm:self-auto flex items-center gap-2 text-xs font-bold text-white bg-[#FF6B35] hover:bg-[#e05621] px-5 py-2.5 rounded-xl shadow-xs transition-all hover:shadow-md cursor-pointer"
+            className="self-start sm:self-auto flex items-center gap-2 text-sm sm:text-[15px] font-bold text-white bg-[#FF6B35] hover:bg-[#e05621] px-6 py-3 rounded-xl shadow-xs transition-all hover:shadow-md cursor-pointer"
           >
-            <Edit2 className="w-4 h-4" />
+            <Edit2 className="w-4.5 h-4.5" />
             Edit Profile
           </button>
         )}
@@ -609,7 +609,7 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
             <div className="relative group my-2">
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gradient-to-br from-orange-100 to-amber-50 cursor-pointer flex items-center justify-center relative transition-transform duration-200 group-hover:scale-105"
+                className="w-32 h-32 sm:w-36 sm:h-36 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gradient-to-br from-orange-100 to-amber-50 cursor-pointer flex items-center justify-center relative transition-transform duration-200 group-hover:scale-105"
                 title="Click to change profile photo"
               >
                 {photoPreview ? (
@@ -633,29 +633,29 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-[#FF6B35] text-white flex items-center justify-center shadow-md border-2 border-white hover:bg-[#e05621] transition-all cursor-pointer"
+                className="absolute bottom-1 right-1 w-10 h-10 rounded-full bg-[#FF6B35] text-white flex items-center justify-center shadow-md border-2 border-white hover:bg-[#e05621] transition-all cursor-pointer"
                 title="Upload Photo"
               >
-                <Camera className="w-4 h-4" />
+                <Camera className="w-4.5 h-4.5" />
               </button>
             </div>
 
             {/* PHOTO PREVIEW SAVE / CANCEL CONTROLS */}
             {photoPreview && (
-              <div className="w-full mt-4 p-3.5 bg-orange-50/80 border border-orange-200 rounded-2xl flex flex-col items-center gap-2">
+              <div className="w-full mt-4 p-4 bg-orange-50/80 border border-orange-200 rounded-2xl flex flex-col items-center gap-2.5">
                 <p className="text-xs font-bold text-orange-900">New photo selected</p>
-                <div className="flex items-center gap-2 w-full">
+                <div className="flex items-center gap-2.5 w-full">
                   <button
                     onClick={handleCancelPhoto}
                     disabled={isUploadingPhoto}
-                    className="flex-1 py-1.5 px-3 border border-orange-200 text-xs font-bold text-gray-700 bg-white rounded-xl hover:bg-gray-50 transition-colors"
+                    className="flex-1 py-2 px-3 border border-orange-200 text-xs font-bold text-gray-700 bg-white rounded-xl hover:bg-gray-50 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSavePhoto}
                     disabled={isUploadingPhoto}
-                    className="flex-1 py-1.5 px-3 bg-[#FF6B35] text-xs font-bold text-white rounded-xl hover:bg-[#e05621] transition-colors flex items-center justify-center gap-1.5 shadow-xs"
+                    className="flex-1 py-2 px-3 bg-[#FF6B35] text-xs font-bold text-white rounded-xl hover:bg-[#e05621] transition-colors flex items-center justify-center gap-1.5 shadow-xs"
                   >
                     {isUploadingPhoto ? (
                       <>
@@ -691,38 +691,38 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
             )}
 
             {/* User Details */}
-            <h2 className="text-xl sm:text-2xl font-bold text-[var(--text)] mt-4 mb-1">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--text)] mt-4 mb-1">
               {profileData.name || 'Craffle User'}
             </h2>
-            <p className="text-xs sm:text-sm text-[var(--text-secondary)] font-medium mb-3 flex items-center justify-center gap-1.5">
-              <Mail className="w-3.5 h-3.5 text-[var(--muted)]" />
+            <p className="text-sm sm:text-[15px] text-[var(--text-secondary)] font-medium mb-3 flex items-center justify-center gap-2">
+              <Mail className="w-4 h-4 text-[var(--muted)]" />
               {profileData.email}
             </p>
 
             {/* Role Badge */}
             <div className="mt-1">
-              <span className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase ${
+              <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-extrabold tracking-wider uppercase ${
                 role === 'ADMIN'
                   ? 'bg-purple-100 text-purple-700 border border-purple-200'
                   : role === 'SELLER'
                   ? 'bg-orange-100 text-[#FF6B35] border border-orange-200'
                   : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
               }`}>
-                <Shield className="w-3 h-3" />
+                <Shield className="w-3.5 h-3.5" />
                 {role}
               </span>
             </div>
 
-            <div className="w-full mt-6 pt-5 border-t border-[var(--border)] grid grid-cols-2 gap-3 text-left">
-              <div className="bg-[var(--bg-secondary)] p-3 rounded-2xl">
-                <span className="text-[10px] font-bold uppercase text-[var(--muted)] block">Member Status</span>
-                <span className="text-xs font-bold text-emerald-600 flex items-center gap-1 mt-0.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Verified
+            <div className="w-full mt-6 pt-5 border-t border-[var(--border)] grid grid-cols-2 gap-4 text-left">
+              <div className="bg-[var(--bg-secondary)] p-3.5 sm:p-4 rounded-2xl">
+                <span className="text-xs font-bold uppercase text-[var(--muted)] block">Member Status</span>
+                <span className="text-sm font-bold text-emerald-600 flex items-center gap-1.5 mt-0.5">
+                  <CheckCircle2 className="w-4 h-4" /> Verified
                 </span>
               </div>
-              <div className="bg-[var(--bg-secondary)] p-3 rounded-2xl">
-                <span className="text-[10px] font-bold uppercase text-[var(--muted)] block">Saved Addresses</span>
-                <span className="text-xs font-bold text-[var(--text)] mt-0.5 block">
+              <div className="bg-[var(--bg-secondary)] p-3.5 sm:p-4 rounded-2xl">
+                <span className="text-xs font-bold uppercase text-[var(--muted)] block">Saved Addresses</span>
+                <span className="text-sm font-bold text-[var(--text)] mt-0.5 block">
                   {addresses.length} {addresses.length === 1 ? 'Address' : 'Addresses'}
                 </span>
               </div>
@@ -730,15 +730,15 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
           </div>
 
           {/* ACCOUNT SECURITY CARD */}
-          <div className="bg-[var(--panel)] rounded-3xl p-6 sm:p-7 border border-[var(--border)] shadow-sm transition-colors duration-200">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--border)]">
-              <h3 className="font-bold text-xs text-[var(--text)] tracking-wider flex items-center gap-2 uppercase">
-                <Key className="w-4 h-4 text-[#FF6B35]" /> Account Security
+          <div className="bg-[var(--panel)] rounded-3xl p-6 sm:p-8 border border-[var(--border)] shadow-sm transition-colors duration-200">
+            <div className="flex items-center justify-between mb-5 pb-4 border-b border-[var(--border)]">
+              <h3 className="font-extrabold text-base sm:text-lg text-[var(--text)] tracking-wider flex items-center gap-2.5 uppercase">
+                <Key className="w-5 h-5 text-[#FF6B35]" /> Account Security
               </h3>
               {!showPasswordForm && (
                 <button
                   onClick={() => setShowPasswordForm(true)}
-                  className="text-xs font-bold text-[#FF6B35] hover:underline"
+                  className="text-sm font-bold text-[#FF6B35] hover:underline"
                 >
                   Change Password
                 </button>
@@ -746,19 +746,19 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
             </div>
 
             {!showPasswordForm ? (
-              <div className="p-4 bg-[var(--bg-secondary)] rounded-2xl flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#FF6B35] flex items-center justify-center">
+              <div className="p-5 bg-[var(--bg-secondary)] rounded-2xl flex items-center justify-between">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-xl bg-orange-50 text-[#FF6B35] flex items-center justify-center">
                     <Lock className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-[var(--text)]">Password Protection</h4>
-                    <p className="text-xs text-[var(--text-secondary)]">Keep your account secure with regular updates</p>
+                    <h4 className="text-base font-bold text-[var(--text)]">Password Protection</h4>
+                    <p className="text-sm text-[var(--text-secondary)]">Keep your account secure with regular updates</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowPasswordForm(true)}
-                  className="p-2 text-xs font-bold text-[#FF6B35] bg-white rounded-xl shadow-xs border border-orange-200 hover:bg-orange-50 transition-colors"
+                  className="px-4 py-2 text-sm font-bold text-[#FF6B35] bg-white rounded-xl shadow-xs border border-orange-200 hover:bg-orange-50 transition-colors cursor-pointer"
                 >
                   Update
                 </button>
@@ -767,7 +767,7 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
               <form onSubmit={handlePasswordChange} className="space-y-4 pt-1">
                 {/* Current Password */}
                 <div>
-                  <label className="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs sm:text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
                     Current Password <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -777,21 +777,21 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
                       value={passwordForm.currentPassword}
                       onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
                       placeholder="Enter current password"
-                      className="w-full px-3.5 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-[#FF6B35] pr-10 font-medium"
+                      className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-[15px] text-[var(--text)] outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-[#FF6B35] pr-10 font-medium"
                     />
                     <button
                       type="button"
                       onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--text)]"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--text)]"
                     >
-                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showCurrentPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
                     </button>
                   </div>
                 </div>
 
                 {/* New Password */}
                 <div>
-                  <label className="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs sm:text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
                     New Password <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -801,26 +801,26 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
                       value={passwordForm.newPassword}
                       onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                       placeholder="At least 6 characters"
-                      className="w-full px-3.5 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-[#FF6B35] pr-10 font-medium"
+                      className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-[15px] text-[var(--text)] outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-[#FF6B35] pr-10 font-medium"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--text)]"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--text)]"
                     >
-                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showNewPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
                     </button>
                   </div>
                   {/* Strength Bar */}
                   {passwordForm.newPassword && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="mt-2.5 flex items-center gap-2.5">
+                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div
                           className={`h-full ${passwordStrength.color} transition-all`}
                           style={{ width: `${(passwordStrength.score / 4) * 100}%` }}
                         />
                       </div>
-                      <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase">
+                      <span className="text-xs font-bold text-[var(--text-secondary)] uppercase">
                         {passwordStrength.text}
                       </span>
                     </div>
@@ -829,7 +829,7 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
 
                 {/* Confirm Password */}
                 <div>
-                  <label className="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs sm:text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
                     Confirm New Password <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -839,37 +839,37 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
                       value={passwordForm.confirmPassword}
                       onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                       placeholder="Re-enter new password"
-                      className="w-full px-3.5 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-[#FF6B35] pr-10 font-medium"
+                      className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-[15px] text-[var(--text)] outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-[#FF6B35] pr-10 font-medium"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--text)]"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--text)]"
                     >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showConfirmPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
                     </button>
                   </div>
                 </div>
 
-                <div className="pt-2 flex items-center justify-end gap-2">
+                <div className="pt-3 flex items-center justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => {
                       setShowPasswordForm(false);
                       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
                     }}
-                    className="px-4 py-2 border border-[var(--border)] text-xs font-bold text-[var(--text-secondary)] rounded-xl hover:bg-[var(--bg-secondary)] transition-colors"
+                    className="px-5 py-2.5 border border-[var(--border)] text-sm font-bold text-[var(--text-secondary)] rounded-xl hover:bg-[var(--bg-secondary)] transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSavingPassword}
-                    className="px-5 py-2 bg-[#FF6B35] hover:bg-[#e05621] text-xs font-bold text-white rounded-xl transition-all shadow-xs flex items-center gap-1.5 disabled:opacity-70"
+                    className="px-6 py-2.5 bg-[#FF6B35] hover:bg-[#e05621] text-sm font-bold text-white rounded-xl transition-all shadow-xs flex items-center gap-2 disabled:opacity-70 cursor-pointer"
                   >
                     {isSavingPassword ? (
                       <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin" />
                         Updating...
                       </>
                     ) : (
@@ -888,28 +888,28 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
           {/* PERSONAL DETAILS CARD */}
           <div className="bg-[var(--panel)] rounded-3xl p-6 sm:p-8 border border-[var(--border)] shadow-sm transition-colors duration-200">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-[var(--border)]">
-              <h3 className="font-bold text-xs text-[var(--text)] tracking-wider flex items-center gap-2 uppercase">
-                <User className="w-4 h-4 text-[#FF6B35]" /> Personal Details
+              <h3 className="font-extrabold text-base sm:text-lg text-[var(--text)] tracking-wider flex items-center gap-2.5 uppercase">
+                <User className="w-5 h-5 text-[#FF6B35]" /> Personal Details
               </h3>
               {!isEditing ? (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="text-xs font-bold text-[#FF6B35] hover:underline flex items-center gap-1"
+                  className="text-sm font-bold text-[#FF6B35] hover:underline flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Edit2 className="w-3 h-3" /> Edit
+                  <Edit2 className="w-3.5 h-3.5" /> Edit
                 </button>
               ) : (
-                <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                <span className="text-xs font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-full uppercase tracking-wider">
                   Editing Mode
                 </span>
               )}
             </div>
 
-            <form onSubmit={handleSaveProfile} className="space-y-5">
+            <form onSubmit={handleSaveProfile} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {/* Full Name */}
                 <div>
-                  <label className="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+                  <label className="block text-xs sm:text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
                     Full Name <span className="text-red-500">*</span>
                   </label>
                   {isEditing ? (
@@ -919,10 +919,10 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
                       value={profileData.name}
                       onChange={e => setProfileData({ ...profileData, name: e.target.value })}
                       placeholder="e.g. Sushi Sharma"
-                      className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl text-sm font-semibold text-[var(--text)] outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF6B35] transition-all"
+                      className="w-full px-4 py-3.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl text-[15px] font-semibold text-[var(--text)] outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF6B35] transition-all"
                     />
                   ) : (
-                    <div className="px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border)]/50 rounded-2xl text-sm font-semibold text-[var(--text)]">
+                    <div className="px-4 py-3.5 bg-[var(--bg-secondary)] border border-[var(--border)]/50 rounded-2xl text-[15px] font-semibold text-[var(--text)]">
                       {profileData.name || <span className="text-[var(--muted)]">Not provided</span>}
                     </div>
                   )}
@@ -930,7 +930,7 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
 
                 {/* Phone Number */}
                 <div>
-                  <label className="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+                  <label className="block text-xs sm:text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
                     Phone Number
                   </label>
                   {isEditing ? (
@@ -939,11 +939,11 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
                       value={profileData.phone}
                       onChange={e => setProfileData({ ...profileData, phone: e.target.value })}
                       placeholder="e.g. +91 98765 43210"
-                      className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl text-sm font-semibold text-[var(--text)] outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF6B35] transition-all"
+                      className="w-full px-4 py-3.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl text-[15px] font-semibold text-[var(--text)] outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF6B35] transition-all"
                     />
                   ) : (
-                    <div className="px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border)]/50 rounded-2xl text-sm font-semibold text-[var(--text)] flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-[var(--muted)]" />
+                    <div className="px-4 py-3.5 bg-[var(--bg-secondary)] border border-[var(--border)]/50 rounded-2xl text-[15px] font-semibold text-[var(--text)] flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-[var(--muted)]" />
                       {profileData.phone || <span className="text-[var(--muted)]">Not provided</span>}
                     </div>
                   )}
@@ -952,19 +952,19 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
 
               {/* Email Address (Read-only for security) */}
               <div>
-                <label className="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
-                  Email Address <span className="text-[10px] font-normal text-[var(--muted)]">(Primary identifier)</span>
+                <label className="block text-xs sm:text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+                  Email Address <span className="text-xs font-normal text-[var(--muted)] normal-case">(Primary identifier)</span>
                 </label>
-                <div className="px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border)]/50 rounded-2xl text-sm font-semibold text-[var(--text)] flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-[var(--muted)]" />
+                <div className="px-4 py-3.5 bg-[var(--bg-secondary)] border border-[var(--border)]/50 rounded-2xl text-[15px] font-semibold text-[var(--text)] flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <Mail className="w-4.5 h-4.5 text-[var(--muted)]" />
                     <span>{profileData.email}</span>
                   </div>
-                  <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1 uppercase tracking-wider">
-                    <Lock className="w-3 h-3" /> Read-only
+                  <span className="text-xs font-bold text-gray-400 flex items-center gap-1 uppercase tracking-wider">
+                    <Lock className="w-3.5 h-3.5" /> Read-only
                   </span>
                 </div>
-                <p className="text-[11px] text-[var(--muted)] mt-1.5 ml-1">
+                <p className="text-xs text-[var(--muted)] mt-2 ml-1">
                   Registered login email cannot be changed directly for account security.
                 </p>
               </div>
@@ -983,14 +983,14 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
                         profileImage: user?.profileImage || ''
                       });
                     }}
-                    className="px-5 py-2.5 border border-[var(--border)] text-xs font-bold text-[var(--text-secondary)] rounded-xl hover:bg-[var(--bg-secondary)] transition-colors"
+                    className="px-5 py-2.5 border border-[var(--border)] text-sm font-bold text-[var(--text-secondary)] rounded-xl hover:bg-[var(--bg-secondary)] transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSavingProfile}
-                    className="px-6 py-2.5 bg-[#FF6B35] hover:bg-[#e05621] text-xs font-bold text-white rounded-xl transition-all shadow-xs flex items-center gap-2 disabled:opacity-70 cursor-pointer"
+                    className="px-6 py-2.5 bg-[#FF6B35] hover:bg-[#e05621] text-sm font-bold text-white rounded-xl transition-all shadow-xs flex items-center gap-2 disabled:opacity-70 cursor-pointer"
                   >
                     {isSavingProfile ? (
                       <>
@@ -1008,43 +1008,43 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
 
           {/* SAVED ADDRESSES CARD */}
           <div className="bg-[var(--panel)] rounded-3xl p-6 sm:p-8 border border-[var(--border)] shadow-sm transition-colors duration-200">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-[var(--border)]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-[var(--border)]">
               <div>
-                <h3 className="font-bold text-xs text-[var(--text)] tracking-wider flex items-center gap-2 uppercase">
-                  <MapPin className="w-4 h-4 text-[#FF6B35]" /> Saved Addresses
+                <h3 className="font-extrabold text-base sm:text-lg text-[var(--text)] tracking-wider flex items-center gap-2.5 uppercase">
+                  <MapPin className="w-5 h-5 text-[#FF6B35]" /> Saved Addresses
                 </h3>
-                <p className="text-xs text-[var(--text-secondary)] mt-0.5">Shipping addresses for instant Craffle checkout</p>
+                <p className="text-sm text-[var(--text-secondary)] mt-1">Shipping addresses for instant Craffle checkout</p>
               </div>
 
               <button
                 onClick={openAddAddress}
-                className="flex items-center gap-1.5 text-xs font-bold text-white bg-[#FF6B35] hover:bg-[#e05621] px-4 py-2 rounded-xl transition-all shadow-xs cursor-pointer"
+                className="self-start sm:self-auto flex items-center gap-2 text-sm font-bold text-white bg-[#FF6B35] hover:bg-[#e05621] px-5 py-2.5 rounded-xl transition-all shadow-xs cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-4 h-4" />
                 Add New Address
               </button>
             </div>
 
             {/* List / Loading / Empty States */}
             {isFetchingAddresses ? (
-              <div className="flex flex-col items-center justify-center py-12 text-[var(--muted)] gap-3">
-                <Loader2 className="w-8 h-8 animate-spin text-[#FF6B35]" />
-                <span className="text-xs font-bold">Loading your saved addresses...</span>
+              <div className="flex flex-col items-center justify-center py-16 text-[var(--muted)] gap-3">
+                <Loader2 className="w-9 h-9 animate-spin text-[#FF6B35]" />
+                <span className="text-sm font-bold">Loading your saved addresses...</span>
               </div>
             ) : addresses.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 px-6 border-2 border-dashed border-[var(--border)] rounded-3xl bg-[var(--bg-secondary)]/30 text-center">
+              <div className="flex flex-col items-center justify-center py-14 px-6 border-2 border-dashed border-[var(--border)] rounded-3xl bg-[var(--bg-secondary)]/30 text-center">
                 <div className="w-16 h-16 rounded-full bg-orange-50 text-[#FF6B35] flex items-center justify-center mb-3">
                   <MapPin className="w-8 h-8" />
                 </div>
-                <h4 className="font-bold text-[var(--text)] text-base">No address saved yet</h4>
-                <p className="text-xs text-[var(--text-secondary)] mt-1 max-w-sm mb-5">
+                <h4 className="font-bold text-[var(--text)] text-lg">No address saved yet</h4>
+                <p className="text-sm text-[var(--text-secondary)] mt-1 max-w-sm mb-6">
                   Save your home, work, or pickup location to enjoy seamless one-click delivery at checkout.
                 </p>
                 <button
                   onClick={openAddAddress}
-                  className="px-5 py-2.5 bg-[#FF6B35] hover:bg-[#e05621] text-xs font-bold text-white rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+                  className="px-6 py-3 bg-[#FF6B35] hover:bg-[#e05621] text-sm font-bold text-white rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" /> Add Your First Address
+                  <Plus className="w-4.5 h-4.5" /> Add Your First Address
                 </button>
               </div>
             ) : (
@@ -1052,59 +1052,59 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
                 {addresses.map((addr) => (
                   <div
                     key={addr._id}
-                    className={`p-5 border rounded-2xl relative transition-all duration-200 ${
+                    className={`p-6 border rounded-2xl relative transition-all duration-200 ${
                       addr.isDefault
                         ? 'border-orange-300 bg-orange-50/20 shadow-xs'
                         : 'border-[var(--border)] bg-[var(--bg-secondary)]/40 hover:border-gray-300'
                     }`}
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                      <div className="flex items-start gap-3.5">
-                        <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#FF6B35] flex items-center justify-center flex-shrink-0 mt-0.5 border border-orange-100">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-orange-50 text-[#FF6B35] flex items-center justify-center shrink-0 mt-0.5 border border-orange-100 shadow-xs">
                           {addr.addressType === 'Work' ? (
-                            <Briefcase className="w-5 h-5" />
+                            <Briefcase className="w-6 h-6" />
                           ) : (
-                            <Home className="w-5 h-5" />
+                            <Home className="w-6 h-6" />
                           )}
                         </div>
 
                         <div>
-                          <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <span className="font-bold text-sm text-[var(--text)]">{addr.name}</span>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[var(--bg-secondary)] text-[var(--text-secondary)] uppercase">
+                          <div className="flex items-center gap-2.5 flex-wrap mb-1.5">
+                            <span className="font-bold text-base sm:text-lg text-[var(--text)]">{addr.name}</span>
+                            <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-[var(--bg-secondary)] text-[var(--text-secondary)] uppercase">
                               {addr.addressType || 'Home'}
                             </span>
                             {addr.isDefault && (
-                              <span className="bg-orange-100 text-[#FF6B35] text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-orange-200 flex items-center gap-1">
-                                <Check className="w-2.5 h-2.5" /> Default Address
+                              <span className="bg-orange-100 text-[#FF6B35] text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider border border-orange-200 flex items-center gap-1.5">
+                                <Check className="w-3.5 h-3.5" /> Default Address
                               </span>
                             )}
                           </div>
 
                           {/* Recipient details */}
                           {(addr.recipientName || addr.phone) && (
-                            <p className="text-xs font-semibold text-[var(--text)] mb-1">
+                            <p className="text-sm font-semibold text-[var(--text)] mb-1">
                               {addr.recipientName} {addr.phone ? `• ${addr.phone}` : ''}
                             </p>
                           )}
 
                           {/* Full Address */}
-                          <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+                          <p className="text-sm sm:text-[15px] text-[var(--text-secondary)] leading-relaxed">
                             {addr.addressLine}
                             {addr.landmark ? `, Landmark: ${addr.landmark}` : ''}
                           </p>
-                          <p className="text-xs font-bold text-[var(--text)] mt-1">
+                          <p className="text-sm font-bold text-[var(--text)] mt-1.5">
                             {addr.city}, {addr.state} — <span className="font-mono text-orange-600">{addr.pinCode}</span>
                           </p>
                         </div>
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-1.5 self-end sm:self-start mt-2 sm:mt-0">
+                      <div className="flex items-center gap-2 self-end sm:self-start mt-2 sm:mt-0">
                         {!addr.isDefault && (
                           <button
                             onClick={() => handleSetDefaultAddress(addr._id)}
-                            className="px-2.5 py-1 text-xs font-bold text-[#FF6B35] hover:bg-orange-50 rounded-lg transition-colors border border-transparent hover:border-orange-200"
+                            className="px-3 py-1.5 text-xs font-bold text-[#FF6B35] hover:bg-orange-50 rounded-lg transition-colors border border-transparent hover:border-orange-200 cursor-pointer"
                             title="Set as Default"
                           >
                             Set Default
@@ -1112,21 +1112,21 @@ export default function ProfilePage({ user, token, showToast, onUserUpdate }: Pr
                         )}
                         <button
                           onClick={() => openEditAddress(addr)}
-                          className="p-1.5 text-[var(--text-secondary)] hover:text-[#FF6B35] hover:bg-[var(--panel)] rounded-lg transition-colors border border-transparent hover:border-[var(--border)]"
+                          className="p-2 text-[var(--text-secondary)] hover:text-[#FF6B35] hover:bg-[var(--panel)] rounded-lg transition-colors border border-transparent hover:border-[var(--border)] cursor-pointer"
                           title="Edit Address"
                         >
-                          <Edit2 className="w-4 h-4" />
+                          <Edit2 className="w-4.5 h-4.5" />
                         </button>
                         <button
                           onClick={() => handleDeleteAddress(addr._id)}
                           disabled={deletingAddressId === addr._id}
-                          className="p-1.5 text-[var(--text-secondary)] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100 disabled:opacity-50"
+                          className="p-2 text-[var(--text-secondary)] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100 disabled:opacity-50 cursor-pointer"
                           title="Delete Address"
                         >
                           {deletingAddressId === addr._id ? (
-                            <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                            <Loader2 className="w-4.5 h-4.5 animate-spin text-red-500" />
                           ) : (
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-4.5 h-4.5" />
                           )}
                         </button>
                       </div>

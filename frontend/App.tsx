@@ -28,10 +28,15 @@ import OrdersPage from './pages/OrdersPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import HelpDeskPage from './pages/HelpDeskPage';
+import ShortsFeedPage from './pages/ShortsFeedPage';
+import GiftDetectivePage from './pages/GiftDetectivePage';
 import { Product, CartItem, Order } from '@shared/types';
 import { AlertTriangle, Clock, X, Info, Sun, Moon } from 'lucide-react';
 import ChatbotSidebar from './components/ChatbotSidebar';
 import { useTheme } from './context/ThemeContext';
+import ImageSearchDialog from './components/visualSearch/ImageSearchDialog';
+import VisualSearchResultsModal from './components/visualSearch/VisualSearchResultsModal';
+import { VisualSearchResultItem } from './components/visualSearch/VisualProductCard';
 
 // GPS helper
 const CHENNAI_DEFAULT = { name: 'OMR Road, Chennai', lat: 12.8456, lon: 80.2265 };
@@ -91,6 +96,24 @@ export default function App() {
   // Toast
   const [toasts, setToasts] = useState<{ id: string; message: string; type: 'success' | 'error' | 'info' }[]>([]);
 
+  // AI Visual Search State
+  const [isVisualSearchOpen, setIsVisualSearchOpen] = useState(false);
+  const [isVisualResultsModalOpen, setIsVisualResultsModalOpen] = useState(false);
+  const [visualSearchResults, setVisualSearchResults] = useState<VisualSearchResultItem[]>([]);
+  const [visualSearchPreview, setVisualSearchPreview] = useState<string | null>(null);
+  const [visualSearchModelInfo, setVisualSearchModelInfo] = useState<{ model: string; version: string } | undefined>(undefined);
+
+  const handleVisualSearchResults = useCallback((
+    results: VisualSearchResultItem[],
+    previewUrl: string,
+    modelInfo: { model: string; version: string }
+  ) => {
+    setVisualSearchResults(results);
+    setVisualSearchPreview(previewUrl);
+    setVisualSearchModelInfo(modelInfo);
+    setIsVisualResultsModalOpen(true);
+  }, []);
+
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
     const id = Math.random().toString(36).substring(7);
     setToasts(prev => [...prev, { id, message, type }]);
@@ -145,6 +168,16 @@ export default function App() {
     }
     if (savedCart) {
       try { setCart(JSON.parse(savedCart)); } catch { }
+    }
+
+    // Check for deep-linked ?short= query parameter
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const shortId = params.get('short');
+      if (shortId) {
+        setCurrentPage('shorts');
+        setPageData({ shortId });
+      }
     }
   }, []);
 
@@ -581,15 +614,6 @@ export default function App() {
     }
   };
 
-  const handleResetDB = async () => {
-    try {
-      const res = await fetch('/api/debug/db/reset');
-      if (res.ok) {
-        handleLogout();
-        showToast('Database reset to initial state!', 'success');
-      }
-    } catch { }
-  };
 
   // ==========================================
   // RENDER
@@ -739,7 +763,17 @@ export default function App() {
           />
         );
       }
-      return <SellerDashboard user={user} seller={seller} token={token!} onLogout={handleLogout} onViewProduct={handleViewProduct} />;
+      return (
+        <SellerDashboard 
+          user={user} 
+          seller={seller} 
+          token={token!} 
+          onLogout={handleLogout} 
+          onViewProduct={handleViewProduct}
+          onNavigateToShorts={(shortId) => handleNavigate('shorts', { shortId })}
+          showToast={showToast}
+        />
+      );
     }
 
     // Admin dashboard
@@ -759,6 +793,18 @@ export default function App() {
             onAddToCart={addToCart}
             onToggleWishlist={toggleWishlist}
             wishlistIds={wishlistIds}
+          />
+        );
+
+      case 'shorts':
+        return (
+          <ShortsFeedPage
+            user={user}
+            token={token}
+            onNavigate={handleNavigate}
+            onViewProduct={handleViewProduct}
+            showToast={showToast}
+            initialShortId={pageData?.shortId}
           />
         );
 
@@ -801,6 +847,20 @@ export default function App() {
           />
         );
 
+      case 'gift-detective':
+      case 'ai-chatbot':
+        return (
+          <GiftDetectivePage
+            user={user}
+            pageData={pageData}
+            onNavigate={handleNavigate}
+            onSelectProduct={handleViewProduct}
+            onAddToCart={addToCart}
+            setCheckoutItems={setCheckoutItems}
+            showToast={showToast}
+          />
+        );
+
       case 'categories':
         return (
           <SearchPage
@@ -811,6 +871,7 @@ export default function App() {
             onToggleWishlist={toggleWishlist}
             wishlistIds={wishlistIds}
             gps={gps}
+            onOpenVisualSearch={() => setIsVisualSearchOpen(true)}
           />
         );
 
@@ -1020,6 +1081,7 @@ export default function App() {
       setIsCartOpen={setIsCartOpen}
       updateCartQuantity={updateCartQuantity}
       removeFromCart={removeFromCart}
+      onOpenVisualSearch={() => setIsVisualSearchOpen(true)}
       onFilterChange={(filters) => {
         // Just merge filters into pageData for the HomePage to pick up
         setPageData((prev: any) => ({ ...prev, filters }));
@@ -1033,8 +1095,47 @@ export default function App() {
     >
       {renderPage()}
 
-      {/* Chatbot Sidebar */}
-      {user && user.role === 'CUSTOMER' && <ChatbotSidebar />}
+      {/* Chatbot Sidebar - Only shown on regular browsing pages */}
+      {(!user || user.role === 'CUSTOMER') && currentPage !== 'gift-detective' && currentPage !== 'ai-chatbot' && (
+        <ChatbotSidebar
+          onNavigate={handleNavigate}
+          onSelectProduct={handleViewProduct}
+          onAddToCart={addToCart}
+          setCheckoutItems={setCheckoutItems}
+          user={user}
+          token={token}
+          showToast={showToast}
+        />
+      )}
+
+      {/* AI Visual Camera Search Modals */}
+      <ImageSearchDialog
+        isOpen={isVisualSearchOpen}
+        onClose={() => setIsVisualSearchOpen(false)}
+        onSearchResults={handleVisualSearchResults}
+      />
+
+      <VisualSearchResultsModal
+        isOpen={isVisualResultsModalOpen}
+        onClose={() => setIsVisualResultsModalOpen(false)}
+        queryImagePreview={visualSearchPreview}
+        results={visualSearchResults}
+        modelInfo={visualSearchModelInfo}
+        onSearchAnother={() => {
+          setIsVisualResultsModalOpen(false);
+          setIsVisualSearchOpen(true);
+        }}
+        onViewProduct={(product) => {
+          setIsVisualResultsModalOpen(false);
+          handleViewProduct(product);
+        }}
+        onAddToCart={(product) => {
+          addToCart(product);
+          showToast(`Added "${product.name || product.productName}" to cart!`, 'success');
+        }}
+        onToggleWishlist={toggleWishlist}
+        wishlistIds={wishlistIds}
+      />
 
       {/* Toast Notifications */}
       <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">

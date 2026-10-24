@@ -3,17 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ShoppingBag, Plus, Edit3, Trash2, Sparkles, CheckCircle, 
   X, Image as ImageIcon, IndianRupee, TrendingUp, Inbox, 
-  BarChart2, Clock, MapPin, Phone, HelpCircle, Save, RefreshCw, Eye, Bell
+  BarChart2, Clock, MapPin, Phone, HelpCircle, Save, RefreshCw, Eye, Bell, Film
 } from 'lucide-react';
 import { Product, Order } from '@shared/types';
 import AddressAutocomplete from '../components/AddressAutocomplete';
 import LocationPicker from '../components/LocationPicker';
 import NotificationCenter from '../components/NotificationCenter';
+import SellerShortsManager from '../components/SellerShortsManager';
+import CreateShortModal from '../components/CreateShortModal';
 import { CATEGORIES } from '@shared/constants';
 
 interface SellerDashboardProps {
@@ -22,10 +24,12 @@ interface SellerDashboardProps {
   token: string;
   onLogout: () => void;
   onViewProduct?: (product: Product) => void;
+  onNavigateToShorts?: (shortId?: string) => void;
+  showToast?: (msg: string, type?: 'success' | 'error' | 'info') => void;
 }
 
-export default function SellerDashboard({ user, seller, token, onLogout, onViewProduct }: SellerDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'revenue' | 'profile' | 'notifications'>('products');
+export default function SellerDashboard({ user, seller, token, onLogout, onViewProduct, onNavigateToShorts, showToast }: SellerDashboardProps) {
+  const [activeTab, setActiveTab] = useState<'products' | 'shorts' | 'orders' | 'revenue' | 'profile' | 'notifications'>('products');
 
   // Stats States
   const [stats, setStats] = useState({
@@ -41,6 +45,24 @@ export default function SellerDashboard({ user, seller, token, onLogout, onViewP
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  // Dedicated Shorts Modal for Menu Products
+  const [createShortProduct, setCreateShortProduct] = useState<Product | null>(null);
+  const [isShortModalOpen, setIsShortModalOpen] = useState(false);
+  const [sellerShorts, setSellerShorts] = useState<any[]>([]);
+
+  const fetchSellerShorts = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch('/api/shorts/seller/my', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSellerShorts(data);
+      }
+    } catch {}
+  };
 
   // Form States for Add/Edit Product
   const [prodName, setProdName] = useState('');
@@ -123,7 +145,20 @@ export default function SellerDashboard({ user, seller, token, onLogout, onViewP
     fetchStats();
     fetchProducts();
     fetchOrders();
+    fetchSellerShorts();
   }, [seller]);
+
+  const productShortsMap = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    sellerShorts.forEach(s => {
+      const pId = s.product?.id || s.product?._id || s.productId;
+      if (pId) {
+        if (!map[pId]) map[pId] = [];
+        map[pId].push(s);
+      }
+    });
+    return map;
+  }, [sellerShorts]);
 
   // Poll for unread notification count
   const [unreadCount, setUnreadCount] = useState(0);
@@ -465,64 +500,71 @@ export default function SellerDashboard({ user, seller, token, onLogout, onViewP
     <div className="min-h-screen bg-[var(--bg)] font-sans pb-16 text-[var(--text)]">
       {/* Seller Header Navbar */}
       <header className="bg-[var(--panel)] border-b border-[var(--border)] sticky top-0 z-30 shadow-sm text-[var(--text)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#FF6B35] rounded-xl text-white">
+        <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-10 h-[72px] flex items-center justify-between">
+          <div className="flex items-center gap-3.5">
+            <div className="p-2.5 bg-[#FF6B35] rounded-xl text-white shadow-md shadow-orange-500/20">
               <ShoppingBag className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-lg font-bold font-serif flex items-center gap-1 text-[var(--text)]">
-                Craffle <span className="px-1.5 py-0.5 bg-[#FF6B35] text-[9px] rounded font-mono uppercase font-extrabold tracking-widest text-white">Seller Room</span>
+              <span className="text-xl font-bold font-serif flex items-center gap-2 text-[var(--text)]">
+                Craffle <span className="px-2 py-0.5 bg-[#FF6B35] text-[10px] rounded-md font-mono uppercase font-extrabold tracking-widest text-white">Seller Studio</span>
               </span>
-              <p className="text-[10px] text-[var(--muted)] font-bold">{seller.name}</p>
+              <p className="text-xs text-[var(--muted)] font-semibold">{seller.name}</p>
             </div>
           </div>
 
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-3">
             <button 
               onClick={() => setActiveTab('products')}
-              className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-colors ${activeTab === 'products' ? 'bg-[#FF6B35] text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}
+              className={`px-4 py-2 rounded-xl font-bold text-[14px] transition-all ${activeTab === 'products' ? 'bg-[#FF6B35] text-white shadow-md shadow-orange-500/20' : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-secondary)]'}`}
             >
               My Menu
             </button>
             <button 
+              onClick={() => setActiveTab('shorts')}
+              className={`px-4 py-2 rounded-xl font-bold text-[14px] transition-all flex items-center gap-2 ${activeTab === 'shorts' ? 'bg-[#FF6B35] text-white shadow-md shadow-orange-500/20' : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-secondary)]'}`}
+            >
+              <Film className="w-4 h-4" />
+              <span>Shorts Studio</span>
+            </button>
+            <button 
               onClick={() => setActiveTab('orders')}
-              className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-colors ${activeTab === 'orders' ? 'bg-[#FF6B35] text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}
+              className={`px-4 py-2 rounded-xl font-bold text-[14px] transition-all ${activeTab === 'orders' ? 'bg-[#FF6B35] text-white shadow-md shadow-orange-500/20' : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-secondary)]'}`}
             >
               Fulfill Orders
               {orders.filter(o => o.status !== 'DELIVERED').length > 0 && (
-                <span className="ml-1 px-1.5 py-0.5 bg-[#FF6B35] text-[9px] text-white rounded-full font-bold">
+                <span className="ml-1.5 px-2 py-0.5 bg-[#FF6B35] text-[10px] text-white rounded-full font-bold">
                   {orders.filter(o => o.status !== 'DELIVERED').length}
                 </span>
               )}
             </button>
             <button 
               onClick={() => setActiveTab('revenue')}
-              className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-colors ${activeTab === 'revenue' ? 'bg-[#FF6B35] text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}
+              className={`px-4 py-2 rounded-xl font-bold text-[14px] transition-all ${activeTab === 'revenue' ? 'bg-[#FF6B35] text-white shadow-md shadow-orange-500/20' : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-secondary)]'}`}
             >
               Earnings Ledger
             </button>
             <button 
               onClick={() => setActiveTab('profile')}
-              className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-colors ${activeTab === 'profile' ? 'bg-[#FF6B35] text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}
+              className={`px-4 py-2 rounded-xl font-bold text-[14px] transition-all ${activeTab === 'profile' ? 'bg-[#FF6B35] text-white shadow-md shadow-orange-500/20' : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-secondary)]'}`}
             >
               My Profile
             </button>
             <button
               onClick={() => { setActiveTab('notifications'); setUnreadCount(0); }}
-              className={`relative p-2 rounded-xl transition-colors ${activeTab === 'notifications' ? 'bg-[#FF6B35] text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text)] border border-[var(--border)]'}`}
+              className={`relative p-2.5 rounded-xl transition-all ${activeTab === 'notifications' ? 'bg-[#FF6B35] text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text)] border border-[var(--border)]'}`}
               title="Notifications"
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-4.5 h-4.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
             </button>
             <button 
               onClick={onLogout}
-              className="px-3 py-1 border border-[var(--border)] hover:bg-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text)] font-bold text-xs rounded-lg transition-colors"
+              className="px-4 py-2 border border-[var(--border)] hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text)] font-bold text-[14px] rounded-xl transition-all ml-2"
             >
               Exit
             </button>
@@ -531,15 +573,15 @@ export default function SellerDashboard({ user, seller, token, onLogout, onViewP
       </header>
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+      <main className="w-full max-w-[1600px] mx-auto px-6 lg:px-10 mt-8 space-y-8">
         
         {/* TOP STATUS OVERVIEW */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="bg-[var(--panel)] p-6 border border-[var(--border)] rounded-3xl shadow-sm flex items-center justify-between">
-            <div className="space-y-0.5">
-              <span className="text-[11px] font-bold text-[var(--muted)] uppercase tracking-wider block">Total Sales Revenue</span>
-              <h3 className="text-2xl font-extrabold text-[var(--text)]">₹{stats.revenue}</h3>
-              <p className="text-[10px] text-[var(--muted)]">From successful deliveries</p>
+          <div className="bg-[var(--panel)] p-7 border border-[var(--border)] rounded-3xl shadow-sm flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider block">Total Sales Revenue</span>
+              <h3 className="text-3xl font-extrabold text-[var(--text)]">₹{stats.revenue}</h3>
+              <p className="text-[13px] text-[var(--muted)]">From successful deliveries</p>
             </div>
             <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-500 border border-emerald-500/20">
               <IndianRupee className="w-6 h-6" />
@@ -607,6 +649,23 @@ export default function SellerDashboard({ user, seller, token, onLogout, onViewP
                         <span className="absolute top-2 right-2 px-2 py-0.5 bg-black/60 backdrop-blur-sm text-white rounded text-[10px] font-bold uppercase tracking-wider">
                           {product.category}
                         </span>
+
+                        {/* Short Active Badge */}
+                        {productShortsMap[product.id]?.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const targetShort = productShortsMap[product.id][0];
+                              onNavigateToShorts?.(targetShort.id || targetShort._id);
+                            }}
+                            className="absolute bottom-2 left-2 px-2.5 py-1 bg-black/80 hover:bg-black backdrop-blur-md text-orange-400 border border-orange-500/40 rounded-lg text-[10px] font-extrabold flex items-center gap-1 shadow-md transition-all hover:scale-105"
+                            title="Watch Short in feed"
+                          >
+                            <Film className="w-3 h-3 text-[#FF6B35]" />
+                            <span>Short Active ({productShortsMap[product.id].length})</span>
+                          </button>
+                        )}
                       </div>
                       <div className="p-4 space-y-1">
                         <h4 className="font-bold text-[var(--text)] text-sm line-clamp-1">{product.name}</h4>
@@ -630,6 +689,17 @@ export default function SellerDashboard({ user, seller, token, onLogout, onViewP
                     </div>
 
                     <div className="p-4 border-t border-[var(--border)] flex items-center justify-end gap-2 text-xs font-bold">
+                      <button 
+                        onClick={() => {
+                          setCreateShortProduct(product);
+                          setIsShortModalOpen(true);
+                        }}
+                        className="p-1.5 bg-orange-500/10 hover:bg-[#FF6B35] border border-orange-500/30 text-[#FF6B35] hover:text-white rounded-lg flex items-center gap-1 transition-all shadow-sm"
+                        title="Upload Craffle Short for this product"
+                      >
+                        <Film className="w-3.5 h-3.5" />
+                        <span>Upload Short</span>
+                      </button>
                       <button 
                         onClick={() => onViewProduct && onViewProduct(product)}
                         className="p-1.5 hover:bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-[var(--text-secondary)] hover:text-[var(--text)] flex items-center gap-1 transition-all"
@@ -657,6 +727,22 @@ export default function SellerDashboard({ user, seller, token, onLogout, onViewP
               </div>
             )}
           </div>
+        )}
+
+        {/* TAB 1.5: CRAFFLE SHORTS STUDIO */}
+        {activeTab === 'shorts' && (
+          <SellerShortsManager
+            seller={seller}
+            token={token}
+            products={products}
+            onViewProduct={onViewProduct}
+            onPreviewShorts={(shortId) => {
+              if (onNavigateToShorts) {
+                onNavigateToShorts(shortId);
+              }
+            }}
+            showToast={showToast || (() => {})}
+          />
         )}
 
         {/* TAB 2: ACTIVE ORDERS FULFILLMENT BOARD */}
@@ -1129,6 +1215,24 @@ export default function SellerDashboard({ user, seller, token, onLogout, onViewP
           </div>
         )}
       </AnimatePresence>
+
+      {/* DEDICATED SELLER CREATE SHORT MODAL (Triggered directly from Menu Products or Shorts Studio) */}
+      <CreateShortModal
+        isOpen={isShortModalOpen}
+        onClose={() => {
+          setIsShortModalOpen(false);
+          setCreateShortProduct(null);
+        }}
+        seller={seller}
+        token={token}
+        initialProduct={createShortProduct}
+        sellerProducts={products}
+        onSuccess={() => {
+          fetchSellerShorts();
+          if (showToast) showToast('Short published to Craffle feed! 🎉', 'success');
+        }}
+        showToast={showToast || (() => {})}
+      />
 
     </div>
   );

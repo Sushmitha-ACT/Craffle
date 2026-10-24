@@ -298,7 +298,7 @@ export default function AdminDashboard({ user, token, onLogout }: AdminDashboard
     <div className="min-h-screen bg-[var(--bg)] font-sans pb-24 text-[var(--text)]">
       {/* Admin Navbar */}
       <header className="bg-[var(--panel)] text-[var(--text)] border-b border-[var(--border)] sticky top-0 z-30 shadow-xs">
-        <div className="max-w-[1540px] mx-auto px-4 sm:px-8 lg:px-12 h-20 flex items-center justify-between">
+        <div className="w-full max-w-[1680px] mx-auto px-6 lg:px-12 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3.5">
             <div className="p-2.5 bg-[#FF6B35] rounded-2xl text-white shadow-sm shadow-orange-500/20">
               <ShoppingBag className="w-6 h-6" />
@@ -352,7 +352,7 @@ export default function AdminDashboard({ user, token, onLogout }: AdminDashboard
       </header>
 
       {/* Main Container */}
-      <main className="max-w-[1540px] mx-auto px-4 sm:px-8 lg:px-12 mt-8 space-y-8">
+      <main className="w-full max-w-[1680px] mx-auto px-6 lg:px-12 mt-8 space-y-8">
         
         {/* TOP METRICS GRIDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
