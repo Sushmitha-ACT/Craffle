@@ -16,11 +16,12 @@
     "allowJs": true,
     "jsx": "react-jsx",
     "paths": {
-      "@client/*": ["./client/*"],
-      "@server/*": ["./server/*"],
+      "@client/*": ["./frontend/*"],
+      "@server/*": ["./backend/*"],
       "@shared/*": ["./shared/*"]
     },
     "allowImportingTsExtensions": true,
+    "ignoreDeprecations": "5.0",
     "baseUrl": ".",
     "noEmit": true
   }

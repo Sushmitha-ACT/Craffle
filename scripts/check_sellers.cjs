@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { Seller } = require('./server/models/Seller.js');
+const { Seller } = require('../backend/models/Seller.js');
 require('dotenv').config();
 
 async function check() {

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import { Order } from './server/models/Order.js';
-import { Notification } from './server/models/Notification.js';
+import { Order } from '../backend/models/Order.js';
+import { Notification } from '../backend/models/Notification.js';
 
 dotenv.config();
 

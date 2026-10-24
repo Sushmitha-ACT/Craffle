@@ -2,10 +2,10 @@
 import mongoose from 'mongoose';
 import fs from 'fs';
 import path from 'path';
-import { User } from './server/models/User.js';
-import { Seller } from './server/models/Seller.js';
-import { Product } from './server/models/Product.js';
-import { Order } from './server/models/Order.js';
+import { User } from '../backend/models/User.js';
+import { Seller } from '../backend/models/Seller.js';
+import { Product } from '../backend/models/Product.js';
+import { Order } from '../backend/models/Order.js';
 import dotenv from 'dotenv';
 dotenv.config();
 

@@ -5,7 +5,7 @@ dotenv.config();
 async function main() {
   // Let's first query the current unread notifications from DB
   const mongoose = await import('mongoose');
-  const { Notification } = await import('./server/models/Notification.js');
+  const { Notification } = await import('../backend/models/Notification.js');
   await mongoose.default.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/craffle');
   
   const notif = await Notification.findOne({ isRead: false });

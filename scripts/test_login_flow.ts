@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
-import { User } from './server/models/User.js';
+import { User } from '../backend/models/User.js';
 
 dotenv.config();
 
@@ -19,7 +19,7 @@ async function test() {
     if (user.role === 'SELLER') {
       console.log('trying to import Seller.js');
       try {
-        const { Seller } = await import('./server/models/Seller.js');
+        const { Seller } = await import('../backend/models/Seller.js');
         const sellerDoc = await Seller.findOne({ userId: user._id });
         if (sellerDoc) seller = { ...sellerDoc.toObject(), id: sellerDoc._id.toString() };
         console.log('Seller imported successfully', seller);

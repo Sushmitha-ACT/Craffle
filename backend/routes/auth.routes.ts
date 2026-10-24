@@ -19,19 +19,34 @@ const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT || '587'),
   secure: false,
-  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+  tls: {
+    rejectUnauthorized: false
+  }
 });
 
 async function sendSimulatedEmail(to, subject, body) {
   try {
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `"Craffle Support" <${process.env.SMTP_USER}>`,
       to,
       subject,
-      text: body
+      text: body,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #f0f0f0; border-radius: 12px; background-color: #ffffff;">
+          <h2 style="color: #FF6B35; margin-top: 0;">Craffle</h2>
+          <div style="font-size: 16px; color: #2d3748; line-height: 1.6; white-space: pre-line;">${body}</div>
+          <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #edf2f7; font-size: 12px; color: #a0aec0;">
+            If you did not request this OTP code, you can safely ignore this email.
+          </div>
+        </div>
+      `
     });
+    console.log(`[Email] OTP email sent successfully to ${to}. MessageId: ${info.messageId}`);
+    return true;
   } catch (err) {
     console.error('Failed to send email:', err);
+    return false;
   }
 }
 
@@ -112,9 +127,19 @@ router.post('/api/auth/resend-otp', async (req, res) => {
       expiresAt: new Date(Date.now() + 5 * 60 * 1000)
     });
 
-    sendSimulatedEmail(email, 'New OTP Code for Craffle Account', `Hello ${user.name},\n\nHere is your new 6-digit Verification OTP code: **${otp}**\n\nThis OTP is valid for 5 minutes.`);
+    const emailSent = await sendSimulatedEmail(
+      email, 
+      'New OTP Code for Craffle Account', 
+      `Hello ${user.name},\n\nHere is your new 6-digit Verification OTP code: **${otp}**\n\nThis OTP is valid for 5 minutes.`
+    );
+
+    if (!emailSent) {
+      return res.status(500).json({ error: 'Failed to send OTP email. Please try again.' });
+    }
+
     res.json({ message: 'New OTP code sent to your email.' });
   } catch(e) {
+    console.error('Resend OTP error:', e);
     res.status(500).json({ error: 'Failed to resend OTP' });
   }
 });
@@ -219,9 +244,19 @@ router.post('/api/auth/forgot-password', async (req, res) => {
       expiresAt: new Date(Date.now() + 5 * 60 * 1000)
     });
 
-    sendSimulatedEmail(email, 'Reset Password Verification OTP', `Hello ${user.name},\n\nYour 6-digit OTP code to reset your password is: **${otp}**\n\nThis OTP is valid for 5 minutes.`);
+    const emailSent = await sendSimulatedEmail(
+      email, 
+      'Reset Password Verification OTP', 
+      `Hello ${user.name},\n\nYour 6-digit OTP code to reset your password is: **${otp}**\n\nThis OTP is valid for 5 minutes.`
+    );
+
+    if (!emailSent) {
+      return res.status(500).json({ error: 'Failed to send OTP email. Please verify SMTP settings or try again.' });
+    }
+
     res.json({ message: 'Password reset OTP sent to your email.' });
   } catch(e) {
+    console.error('Forgot password error:', e);
     res.status(500).json({ error: 'Failed to send OTP' });
   }
 });

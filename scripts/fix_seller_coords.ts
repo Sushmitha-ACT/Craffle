@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import mongoose from 'mongoose';
-import { Seller } from './server/models/Seller.js';
+import { Seller } from '../backend/models/Seller.js';
 import dotenv from 'dotenv';
 
 dotenv.config();

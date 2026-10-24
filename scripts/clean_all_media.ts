@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
-import { Product } from './server/models/Product.js';
+import { Product } from '../backend/models/Product.js';
 
 async function test() {
   await mongoose.connect(process.env.MONGODB_URI);
