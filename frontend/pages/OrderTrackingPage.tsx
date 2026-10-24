@@ -3,18 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
   CheckCircle, Clock, Package, Truck, MapPin,
-  Phone, ArrowLeft, XCircle, ChefHat
+  Phone, ArrowLeft, XCircle, ChefHat, CreditCard,
+  Store, Copy, Check, HelpCircle, FileText, ChevronRight
 } from 'lucide-react';
-import { Order, OrderStatus } from '@shared/types';
+import { Order } from '@shared/types';
 
 interface OrderTrackingPageProps {
   order: Order;
   onBack: () => void;
   onCancelOrder: (orderId: string) => void;
+  onNavigate?: (page: string) => void;
 }
 
 const DELIVERY_STEPS = [
@@ -33,82 +35,202 @@ const PICKUP_STEPS = [
   { status: 'Picked Up', label: 'Picked Up', icon: <CheckCircle className="w-4 h-4" />, desc: 'Order picked up successfully!' },
 ];
 
-export default function OrderTrackingPage({ order, onBack, onCancelOrder }: OrderTrackingPageProps) {
-  const statusUpper = order.status.toUpperCase();
-  const isCancelled = statusUpper === 'CANCELLED';
-  
-  const activeSteps = order.fulfillmentMethod === 'SELF_PICKUP' ? PICKUP_STEPS : DELIVERY_STEPS;
-  const statusOrder = activeSteps.map(s => s.status);
-  
-  const currentStepIndex = statusOrder.indexOf(order.status as any);
+export default function OrderTrackingPage({ order: initialOrder, onBack, onCancelOrder, onNavigate }: OrderTrackingPageProps) {
+  const [order, setOrder] = useState<Order>(initialOrder);
+  const [copied, setCopied] = useState(false);
+  const [loadingFresh, setLoadingFresh] = useState(false);
 
-  const formatDate = (d: string) => new Date(d).toLocaleDateString('en-IN', {
-    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-  });
+  // If order details (e.g. address, phone, fulfillmentMethod) might be missing from cached state, fetch fresh from backend
+  useEffect(() => {
+    setOrder(initialOrder);
+    const orderId = initialOrder.id || (initialOrder as any)._id;
+    if (!orderId) return;
+
+    // Check if key details are missing
+    if (!initialOrder.address || !initialOrder.fulfillmentMethod || !initialOrder.phone) {
+      setLoadingFresh(true);
+      fetch(`/api/orders/${orderId}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data && data.id) {
+            setOrder(prev => ({ ...prev, ...data }));
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoadingFresh(false));
+    }
+  }, [initialOrder]);
+
+  const statusRaw = order.status || 'Pending';
+  const statusUpper = statusRaw.toUpperCase();
+  const isCancelled = statusUpper === 'CANCELLED';
+
+  const isPickup = String(order.fulfillmentMethod || '').toUpperCase() === 'SELF_PICKUP';
+  const activeSteps = isPickup ? PICKUP_STEPS : DELIVERY_STEPS;
+  const statusOrder = activeSteps.map(s => s.status.toLowerCase());
+
+  // Match step index
+  const currentStepIndex = statusOrder.findIndex(
+    s => s === statusRaw.toLowerCase()
+  );
+
+  const formatDate = (d?: string) => {
+    if (!d) return 'Just now';
+    try {
+      return new Date(d).toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+    } catch {
+      return d;
+    }
+  };
+
+  const handleCopyId = () => {
+    if (order.id) {
+      navigator.clipboard.writeText(order.id);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const deliveryAddress = order.address || (order as any).deliveryAddress;
+  const contactPhone = order.phone || (order as any).customerPhone;
+  const paymentId = order.paymentId || (order as any).paymentReference;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 page-enter">
-      <div className="flex items-center gap-3 mb-6">
-        <button onClick={onBack} className="p-2 rounded-lg hover:bg-[var(--bg-secondary)]"
-          style={{ color: 'var(--text-secondary)' }}>
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-lg font-bold" style={{ color: 'var(--text)' }}>Order #{order.id.slice(-6)}</h1>
-          <p className="text-xs" style={{ color: 'var(--muted)' }}>{formatDate(order.createdAt)}</p>
+    <div className="max-w-3xl mx-auto px-4 py-8 page-enter transition-colors duration-200">
+      {/* Top Navigation & Title */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="p-2.5 rounded-xl bg-[var(--panel)] border border-[var(--border)] hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors shadow-xs"
+            aria-label="Back to orders"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-extrabold text-[var(--text)]">
+                Order #{order.id ? order.id.slice(-6).toUpperCase() : 'DETAILS'}
+              </h1>
+              <button
+                onClick={handleCopyId}
+                className="p-1 rounded hover:bg-[var(--bg-secondary)] text-[var(--muted)] hover:text-orange-500 transition-colors"
+                title="Copy Full Order ID"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              Placed on {formatDate(order.createdAt)}
+            </p>
+          </div>
         </div>
+
+        {onNavigate && (
+          <button
+            onClick={() => onNavigate('helpdesk')}
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] hover:border-orange-300 text-xs font-semibold text-[var(--text-secondary)] hover:text-orange-600 transition-all"
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-orange-500" /> Need Help?
+          </button>
+        )}
       </div>
 
       {/* Status Banner */}
-      <div className={`card-surface p-4 mb-6 ${isCancelled ? '' : ''}`}
-        style={{ borderLeft: `4px solid ${isCancelled ? 'var(--danger)' : 'var(--primary)'}` }}>
+      <div className={`p-4 rounded-2xl mb-6 border transition-colors ${
+        isCancelled
+          ? 'bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400'
+          : statusUpper === 'DELIVERED' || statusUpper === 'PICKED UP'
+            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-800 dark:text-emerald-300'
+            : 'bg-orange-500/10 border-orange-500/20 text-orange-900 dark:text-orange-300'
+      }`}>
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-            style={{
-              background: isCancelled ? 'var(--danger-light)' : statusUpper === 'DELIVERED' ? 'var(--success-light)' : 'var(--primary-light)',
-              color: isCancelled ? 'var(--danger)' : statusUpper === 'DELIVERED' ? 'var(--success)' : 'var(--primary)',
-            }}>
-            {isCancelled ? <XCircle className="w-6 h-6" /> : statusUpper === 'DELIVERED' ? <CheckCircle className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+            isCancelled
+              ? 'bg-red-500/20 text-red-600 dark:text-red-400'
+              : statusUpper === 'DELIVERED' || statusUpper === 'PICKED UP'
+                ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                : 'bg-orange-500/20 text-orange-600 dark:text-orange-400'
+          }`}>
+            {isCancelled ? <XCircle className="w-6 h-6" /> : statusUpper === 'DELIVERED' || statusUpper === 'PICKED UP' ? <CheckCircle className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
           </div>
-          <div>
-            <h3 className="text-sm font-bold" style={{ color: 'var(--text)' }}>
-              {isCancelled ? 'Order Cancelled' : statusUpper === 'DELIVERED' || statusUpper === 'PICKED UP' ? 'Order Completed! 🎉' : `Status: ${order.status.replace(/_/g, ' ')}`}
+          <div className="flex-1">
+            <h3 className="text-sm font-bold">
+              {isCancelled
+                ? 'Order Cancelled'
+                : statusUpper === 'DELIVERED' || statusUpper === 'PICKED UP'
+                  ? 'Order Completed Successfully! 🎉'
+                  : `Order Status: ${statusRaw.replace(/_/g, ' ')}`}
             </h3>
             {order.estimatedDelivery && !isCancelled && statusUpper !== 'DELIVERED' && (
-              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                Estimated delivery: <strong>{order.estimatedDelivery}</strong>
+              <p className="text-xs mt-0.5 opacity-90">
+                Estimated Delivery: <strong className="font-bold">{order.estimatedDelivery}</strong>
               </p>
             )}
             {isCancelled && order.cancelReason && (
-              <p className="text-xs" style={{ color: 'var(--danger)' }}>Reason: {order.cancelReason}</p>
+              <p className="text-xs mt-0.5 text-red-600 dark:text-red-400 font-medium">
+                Reason: {order.cancelReason}
+              </p>
             )}
           </div>
         </div>
       </div>
 
-      {/* Timeline */}
+      {/* Timeline Stepper */}
       {!isCancelled && (
-        <div className="card-surface p-5 mb-6">
-          <h3 className="text-sm font-bold mb-4" style={{ color: 'var(--text)' }}>Order Timeline</h3>
-          <div className="space-y-1">
+        <div className="bg-[var(--panel)] border border-[var(--border)] rounded-2xl p-6 mb-6 shadow-xs transition-colors duration-200">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-sm font-bold text-[var(--text)]">Order Progress</h3>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border)]">
+              {isPickup ? 'Self Pickup Flow' : 'Standard Delivery'}
+            </span>
+          </div>
+
+          <div className="space-y-4">
             {activeSteps.map((step, i) => {
               const isCompleted = i < currentStepIndex;
               const isActive = i === currentStepIndex;
               const isPending = i > currentStepIndex;
 
               return (
-                <div key={step.status} className="timeline-step pb-4">
+                <div key={step.status} className="flex items-start gap-4 relative">
+                  {/* Connecting Line */}
+                  {i < activeSteps.length - 1 && (
+                    <div
+                      className={`absolute left-4 top-8 w-0.5 h-8 -ml-[1px] transition-colors ${
+                        isCompleted ? 'bg-orange-500' : 'bg-[var(--border)]'
+                      }`}
+                    />
+                  )}
+
+                  {/* Icon Circle */}
                   <motion.div
                     initial={isActive ? { scale: 0.8 } : {}}
                     animate={isActive ? { scale: [0.8, 1.1, 1] } : {}}
                     transition={{ duration: 0.5 }}
-                    className={`timeline-dot ${isCompleted ? 'completed' : isActive ? 'active' : 'pending'}`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 z-10 font-bold transition-all ${
+                      isCompleted
+                        ? 'bg-orange-500 text-white shadow-xs'
+                        : isActive
+                          ? 'bg-orange-500/20 text-orange-600 dark:text-orange-400 border-2 border-orange-500 shadow-sm'
+                          : 'bg-[var(--bg-secondary)] text-[var(--muted)] border border-[var(--border)]'
+                    }`}
                   >
-                    {isCompleted ? <CheckCircle className="w-4 h-4" /> : step.icon}
+                    {isCompleted ? <Check className="w-4 h-4 stroke-[3]" /> : step.icon}
                   </motion.div>
-                  <div className="pt-1">
-                    <h4 className="text-sm font-bold" style={{ color: isPending ? 'var(--muted)' : 'var(--text)' }}>{step.label}</h4>
-                    <p className="text-xs" style={{ color: 'var(--muted)' }}>{step.desc}</p>
+
+                  {/* Text details */}
+                  <div className="flex-1 pt-0.5 pb-3">
+                    <h4 className={`text-sm font-bold transition-colors ${
+                      isActive ? 'text-orange-600 dark:text-orange-400' : isPending ? 'text-[var(--muted)]' : 'text-[var(--text)]'
+                    }`}>
+                      {step.label}
+                    </h4>
+                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                      {step.desc}
+                    </p>
                   </div>
                 </div>
               );
@@ -117,76 +239,218 @@ export default function OrderTrackingPage({ order, onBack, onCancelOrder }: Orde
         </div>
       )}
 
-      {/* Order Details */}
-      <div className="card-surface p-5 mb-6">
-        <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--text)' }}>Items</h3>
-        <div className="space-y-2">
-          {order.items.map(item => (
-            <div key={item.productId} className="flex items-center justify-between py-2 border-b last:border-0"
-              style={{ borderColor: 'var(--border)' }}>
-              <div>
-                <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{item.name}</p>
-                <p className="text-xs" style={{ color: 'var(--muted)' }}>x{item.quantity}</p>
+      {/* Items Summary Card */}
+      <div className="bg-[var(--panel)] border border-[var(--border)] rounded-2xl p-6 mb-6 shadow-xs transition-colors duration-200">
+        <h3 className="text-sm font-bold text-[var(--text)] mb-4">Items Ordered</h3>
+        <div className="space-y-3">
+          {(order.items || []).map((item, idx) => (
+            <div
+              key={item.productId || idx}
+              className="flex items-center justify-between py-2.5 border-b border-[var(--border)] last:border-0"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] flex items-center justify-center text-orange-500 shrink-0 font-bold text-xs">
+                  {item.image ? (
+                    <img src={item.image} alt={item.name} className="w-full h-full object-cover rounded-xl" />
+                  ) : (
+                    <Package className="w-5 h-5 text-[var(--muted)]" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-[var(--text)]">{item.name}</p>
+                  <p className="text-xs text-[var(--text-secondary)] font-medium">Quantity: {item.quantity} × ₹{item.price}</p>
+                </div>
               </div>
-              <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>₹{item.price * item.quantity}</span>
+              <span className="text-sm font-extrabold text-[var(--text)]">
+                ₹{item.price * item.quantity}
+              </span>
             </div>
           ))}
         </div>
-        <div className="divider mt-3 mb-3" />
-        <div className="flex justify-between">
-          <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>Total</span>
-          <span className="text-base font-extrabold" style={{ color: 'var(--primary)' }}>₹{order.total}</span>
+
+        <div className="border-t border-[var(--border)] mt-4 pt-4 space-y-2 text-xs">
+          <div className="flex justify-between text-[var(--text-secondary)]">
+            <span>Subtotal</span>
+            <span className="font-semibold text-[var(--text)]">₹{order.total}</span>
+          </div>
+          <div className="flex justify-between text-[var(--text-secondary)]">
+            <span>Delivery Fee</span>
+            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+              {isPickup ? 'Free (Self Pickup)' : 'Free Delivery'}
+            </span>
+          </div>
+          <div className="border-t border-[var(--border)] pt-2.5 flex justify-between items-center text-base">
+            <span className="font-bold text-[var(--text)]">Total Paid</span>
+            <span className="text-lg font-black text-orange-600 dark:text-orange-400">₹{order.total}</span>
+          </div>
         </div>
       </div>
 
-      {/* Details */}
-      <div className="card-surface p-5 mb-6">
-        <h3 className="text-sm font-bold mb-4" style={{ color: 'var(--text)' }}>Order Details</h3>
-        
-        {order.fulfillmentMethod === 'SELF_PICKUP' && (
-          <div className="mb-4">
-            <h4 className="text-xs font-semibold mb-1" style={{ color: 'var(--muted)' }}>Pickup From</h4>
-            <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>{order.sellerName}</p>
-            
-            {(order.status as any) === 'Pending' ? (
-              <div className="mt-4 p-3 rounded-xl bg-orange-50 border border-orange-100 flex gap-3 items-start">
-                <Clock className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-                <p className="text-xs text-orange-800 font-medium leading-relaxed">
-                  The exact pickup location and directions will be revealed here once the seller approves your request.
-                </p>
+      {/* Order Details Card */}
+      <div className="bg-[var(--panel)] border border-[var(--border)] rounded-2xl p-6 mb-6 shadow-xs transition-colors duration-200">
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--border)]">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center">
+              <FileText className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[var(--text)]">Order Details</h3>
+              <p className="text-xs text-[var(--text-secondary)]">Fulfillment, address and transaction records</p>
+            </div>
+          </div>
+          <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full ${
+            isPickup
+              ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+              : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+          }`}>
+            {isPickup ? '📍 Self Pickup' : '🚚 Doorstep Delivery'}
+          </span>
+        </div>
+
+        <div className="space-y-4">
+          {/* Fulfillment & Destination Section */}
+          {isPickup ? (
+            <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
+              <div className="flex items-start gap-3">
+                <Store className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-1">
+                    Pickup Location & Creator
+                  </h4>
+                  <p className="text-sm font-bold text-[var(--text)]">
+                    {order.sellerName || 'Craffle Creator'}
+                  </p>
+                  {order.sellerAddress && (
+                    <p className="text-xs text-[var(--text-secondary)] mt-1 font-medium">
+                      {order.sellerAddress}
+                    </p>
+                  )}
+                  {order.sellerPhone && (
+                    <p className="text-xs text-[var(--text-secondary)] mt-1.5 flex items-center gap-1.5 font-medium">
+                      <Phone className="w-3.5 h-3.5 text-orange-500" /> {order.sellerPhone}
+                    </p>
+                  )}
+
+                  {statusUpper === 'PENDING' ? (
+                    <div className="mt-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 flex gap-2.5 items-center">
+                      <Clock className="w-4 h-4 text-amber-500 shrink-0" />
+                      <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">
+                        The exact pickup location and directions will be enabled here once the creator approves your request.
+                      </p>
+                    </div>
+                  ) : (
+                    order.sellerLocation && order.sellerLocation.latitude && (
+                      <button
+                        onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${order.sellerLocation?.latitude},${order.sellerLocation?.longitude}`, '_blank')}
+                        className="mt-3 py-2 px-4 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-xs"
+                      >
+                        <MapPin className="w-3.5 h-3.5" /> Get Directions on Maps
+                      </button>
+                    )
+                  )}
+                </div>
               </div>
-            ) : (
-              order.sellerLocation && order.sellerLocation.latitude && (
-                <button 
-                  onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${order.sellerLocation?.latitude},${order.sellerLocation?.longitude}`, '_blank')}
-                  className="mt-4 btn-secondary py-2 text-xs flex items-center justify-center gap-1.5 w-full"
-                >
-                  <MapPin className="w-3 h-3" /> Get Directions
-                </button>
-              )
-            )}
+            </div>
+          ) : (
+            <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
+              <div className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-1">
+                    Delivery Address
+                  </h4>
+                  <p className="text-sm font-semibold text-[var(--text)] leading-relaxed">
+                    {deliveryAddress || 'Address specified during checkout'}
+                  </p>
+                  {contactPhone && (
+                    <p className="text-xs text-[var(--text-secondary)] mt-2 flex items-center gap-1.5 font-medium">
+                      <Phone className="w-3.5 h-3.5 text-orange-500" /> Contact Phone: {contactPhone}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Seller and Payment Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Seller Info */}
+            <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)] block mb-1">
+                Seller / Kitchen
+              </span>
+              <p className="text-sm font-bold text-[var(--text)] flex items-center gap-1.5">
+                <Store className="w-4 h-4 text-orange-500" />
+                {order.sellerName || 'Craffle Artisan'}
+              </p>
+              {order.sellerAddress && (
+                <p className="text-xs text-[var(--text-secondary)] mt-1 truncate" title={order.sellerAddress}>
+                  {order.sellerAddress}
+                </p>
+              )}
+            </div>
+
+            {/* Payment Summary */}
+            <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)] block mb-1">
+                Payment Status
+              </span>
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  <CheckCircle className="w-3 h-3" /> Paid Online
+                </span>
+                <span className="text-xs font-bold text-[var(--text)]">
+                  ₹{order.total}
+                </span>
+              </div>
+              <p className="text-[11px] text-[var(--muted)] font-mono mt-1.5 truncate" title={paymentId || 'Online Payment'}>
+                Payment Ref: {paymentId || 'Razorpay / UPI'}
+              </p>
+            </div>
           </div>
-        )}
-        
-        {order.fulfillmentMethod === 'DELIVERY' && (
-          <div className="mb-4">
-            <h4 className="text-xs font-semibold mb-1" style={{ color: 'var(--muted)' }}>Delivery Address</h4>
-            <p className="text-sm" style={{ color: 'var(--text)' }}>{order.address}</p>
-            <p className="text-sm mt-1" style={{ color: 'var(--text)' }}>Phone: {order.phone}</p>
+
+          {/* Order Reference Footnote */}
+          <div className="pt-3 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-secondary)]">
+            <div className="flex items-center gap-1.5">
+              <span>Order Reference:</span>
+              <span className="font-mono font-bold text-[var(--text)]">
+                #{order.id ? order.id.slice(-8).toUpperCase() : 'PENDING'}
+              </span>
+              <button
+                onClick={handleCopyId}
+                className="p-1 hover:bg-[var(--bg-secondary)] rounded text-[var(--muted)] hover:text-orange-500 transition-colors"
+                title="Copy Full ID"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <div>
+              Placed: <span className="font-medium text-[var(--text)]">{formatDate(order.createdAt)}</span>
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Cancel button */}
-      {statusUpper === 'PENDING' && !isCancelled && (
-        <button
-          onClick={() => onCancelOrder(order.id)}
-          className="w-full py-3 rounded-xl text-sm font-bold transition-colors"
-          style={{ background: 'var(--danger-light)', color: 'var(--danger)', border: '1px solid var(--danger)30' }}
-        >
-          Cancel Order
-        </button>
-      )}
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        {onNavigate && (
+          <button
+            onClick={() => onNavigate('helpdesk')}
+            className="flex-1 py-3 px-4 rounded-xl border border-[var(--border)] bg-[var(--panel)] hover:bg-[var(--bg-secondary)] text-[var(--text)] text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-xs"
+          >
+            <HelpCircle className="w-4 h-4 text-orange-500" /> Report an Issue or Get Help
+          </button>
+        )}
+
+        {statusUpper === 'PENDING' && !isCancelled && (
+          <button
+            onClick={() => onCancelOrder(order.id)}
+            className="py-3 px-5 rounded-xl text-sm font-bold transition-all bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/20"
+          >
+            Cancel Order
+          </button>
+        )}
+      </div>
     </div>
   );
 }

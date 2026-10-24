@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ShoppingBag, Search, Heart, Bell, ChevronDown, User, LogOut } from 'lucide-react';
+import { ShoppingBag, Search, Heart, Bell, ChevronDown, User, LogOut, Sun, Moon, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useTheme } from '../context/ThemeContext';
 
 interface NavbarProps {
   user: any;
@@ -13,6 +14,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ user, cartCount, notificationCount, onNavigate, onOpenCart, onLogout, onToggleMobileSidebar }: NavbarProps) {
+  const { isDark, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -85,16 +87,40 @@ export default function Navbar({ user, cartCount, notificationCount, onNavigate,
             )}
             <span className="text-[10px] font-medium text-[var(--text-secondary)] group-hover:text-[#FF6B35]">Notifications</span>
           </button>
+
+          {/* Quick Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="flex flex-col items-center gap-1 group cursor-pointer text-[var(--text-secondary)] hover:text-[#FF6B35] transition-colors"
+            title={`Switch to ${isDark ? 'Light' : 'Dark'} mode`}
+            aria-label="Toggle theme"
+          >
+            {isDark ? (
+              <Sun className="w-5 h-5 text-amber-500 hover:rotate-45 transition-transform" />
+            ) : (
+              <Moon className="w-5 h-5 group-hover:-rotate-12 transition-transform" />
+            )}
+            <span className="text-[10px] font-medium text-[var(--text-secondary)] group-hover:text-[#FF6B35]">
+              {isDark ? 'Light' : 'Dark'}
+            </span>
+          </button>
         </div>
 
         {/* User Profile Dropdown */}
         <div className="relative" ref={userMenuRef}>
           <button 
             onClick={() => setUserMenuOpen(!userMenuOpen)}
-            className="flex items-center gap-2 pl-4 border-l border-[var(--border)]"
+            className="flex items-center gap-2 pl-4 border-l border-[var(--border)] cursor-pointer"
           >
             <div className="w-8 h-8 rounded-full bg-[var(--bg-secondary)] overflow-hidden border border-[var(--border)]">
-              <img src={user?.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=FF6B35&color=fff`} alt="Profile" className="w-full h-full object-cover" />
+              <img 
+                src={user?.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=FF6B35&color=fff`} 
+                alt="Profile" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=FF6B35&color=fff`;
+                }}
+              />
             </div>
             <span className="text-sm font-semibold text-[var(--text)] hidden lg:block">{user?.name?.split(' ')[0] || 'User'}</span>
             <ChevronDown className="w-3.5 h-3.5 text-[var(--muted)] hidden lg:block" />
@@ -107,7 +133,7 @@ export default function Navbar({ user, cartCount, notificationCount, onNavigate,
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                 transition={{ duration: 0.15 }}
-                className="absolute right-0 mt-3 w-48 bg-[var(--panel)] rounded-xl shadow-xl border border-[var(--border)] overflow-hidden py-1"
+                className="absolute right-0 mt-3 w-52 bg-[var(--panel)] rounded-xl shadow-xl border border-[var(--border)] overflow-hidden py-1 z-50"
               >
                 <div className="px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-secondary)]">
                   <p className="text-sm font-semibold text-[var(--text)] truncate">{user?.name}</p>
@@ -118,6 +144,16 @@ export default function Navbar({ user, cartCount, notificationCount, onNavigate,
                 </button>
                 <button onClick={() => { setUserMenuOpen(false); onNavigate('orders'); }} className="w-full text-left px-4 py-2.5 text-sm text-[var(--text)] hover:bg-[var(--bg-secondary)] flex items-center gap-2">
                   <ShoppingBag className="w-4 h-4 text-[var(--muted)]" /> Orders
+                </button>
+                <button onClick={() => { setUserMenuOpen(false); onNavigate('settings'); }} className="w-full text-left px-4 py-2.5 text-sm text-[var(--text)] hover:bg-[var(--bg-secondary)] flex items-center gap-2">
+                  <Settings className="w-4 h-4 text-[var(--muted)]" /> Settings
+                </button>
+                <button onClick={() => { toggleTheme(); }} className="w-full text-left px-4 py-2.5 text-sm text-[var(--text)] hover:bg-[var(--bg-secondary)] flex items-center justify-between border-t border-[var(--border)]">
+                  <span className="flex items-center gap-2">
+                    {isDark ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-[var(--muted)]" />}
+                    Theme
+                  </span>
+                  <span className="text-xs font-bold text-[#FF6B35] uppercase">{isDark ? 'Dark' : 'Light'}</span>
                 </button>
                 <button onClick={() => { setUserMenuOpen(false); onLogout(); }} className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-500/10 flex items-center gap-2 border-t border-[var(--border)]">
                   <LogOut className="w-4 h-4 text-red-500" /> Logout

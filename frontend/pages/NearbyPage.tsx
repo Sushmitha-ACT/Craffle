@@ -180,17 +180,17 @@ export default function NearbyPage({ onViewProduct, onAddToCart, showToast, onTo
   if (!locationGranted) {
     return (
       <div className="p-4 lg:p-8 animate-fade-in w-full max-w-7xl mx-auto h-[80vh] flex flex-col items-center justify-center">
-        <div className="max-w-md w-full bg-white p-8 rounded-3xl border border-gray-200 shadow-xl text-center space-y-6">
-          <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto text-[#FF6B35]">
+        <div className="max-w-md w-full bg-[var(--panel)] p-8 rounded-3xl border border-[var(--border)] shadow-xl text-center space-y-6 text-[var(--text)]">
+          <div className="w-20 h-20 bg-orange-500/10 border border-orange-500/20 rounded-full flex items-center justify-center mx-auto text-[#FF6B35]">
             <MapPin className="w-10 h-10" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Find Local Creators</h1>
-            <p className="text-sm text-gray-500">We need your location to show you homemade food and crafts available in your neighborhood.</p>
+            <h1 className="text-2xl font-bold text-[var(--text)] mb-2">Find Local Creators</h1>
+            <p className="text-sm text-[var(--text-secondary)]">We need your location to show you homemade food and crafts available in your neighborhood.</p>
           </div>
           
           {locationError && (
-            <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-semibold flex items-center gap-2 text-left">
+            <div className="p-3 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-xs font-semibold flex items-center gap-2 text-left">
               <AlertCircle className="w-4 h-4 shrink-0" />
               {locationError}
             </div>
@@ -373,12 +373,12 @@ export default function NearbyPage({ onViewProduct, onAddToCart, showToast, onTo
         )}
         
         {/* Radius Controls Overlay */}
-        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-1 rounded-full border border-gray-200 shadow-sm flex items-center z-[1000]">
+        <div className="absolute top-4 left-4 bg-[var(--panel)]/90 backdrop-blur-sm p-1 rounded-full border border-[var(--border)] shadow-sm flex items-center z-[1000]">
           {[1, 5, 10, 20].map(r => (
             <button
               key={r}
               onClick={() => setMapRadius(r)}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${mapRadius === r ? 'bg-[#FF6B35] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${mapRadius === r ? 'bg-[#FF6B35] text-white' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'}`}
             >
               {r} km
             </button>
@@ -394,7 +394,7 @@ export default function NearbyPage({ onViewProduct, onAddToCart, showToast, onTo
       {/* Products Below Map */}
       <div>
         <div className="flex items-center gap-4 mb-6">
-          <h2 className="text-[24px] font-extrabold text-[#1F2937]">Found {filteredProducts.length} Products</h2>
+          <h2 className="text-[24px] font-extrabold text-[var(--text)]">Found {filteredProducts.length} Products</h2>
           {loading && <Loader2 className="w-5 h-5 text-[#FF6B35] animate-spin" />}
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-6">

@@ -1,24 +1,59 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Craffle — Discover Homemade Creations Near You | Hyperlocal Marketplace</title>
-    <meta name="description" content="Craffle connects you with home-based creators selling fresh cakes, sweets, pickles, crafts, paintings, and gifts near you. GPS-powered local discovery." />
-    <meta name="keywords" content="craffle, hyperlocal marketplace, homemade, local creators, cakes near me, handmade crafts, home delivery" />
-    <meta name="author" content="Craffle" />
-    <meta name="theme-color" content="#FF6B35" />
-    <meta property="og:title" content="Craffle — Discover Homemade Creations Near You" />
-    <meta property="og:description" content="GPS-powered marketplace connecting home-based creators with nearby customers." />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Craffle" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/frontend/main.tsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Craffle — Discover Homemade Creations Near You | Hyperlocal Marketplace</title>
+  <meta name="description"
+    content="Craffle connects you with home-based creators selling fresh cakes, sweets, pickles, crafts, paintings, and gifts near you. GPS-powered local discovery." />
+  <meta name="keywords"
+    content="craffle, hyperlocal marketplace, homemade, local creators, cakes near me, handmade crafts, home delivery" />
+  <meta name="author" content="Craffle" />
+  <meta name="theme-color" content="#FF6B35" />
+  <meta property="og:title" content="Craffle — Discover Homemade Creations Near You" />
+  <meta property="og:description"
+    content="GPS-powered marketplace connecting home-based creators with nearby customers." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Craffle" />
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+    rel="stylesheet" />
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem('craffle_theme');
+        if (!theme) {
+          var legacy = localStorage.getItem('craffle_dark');
+          if (legacy === 'true') theme = 'dark';
+          else if (legacy === 'false') theme = 'light';
+        }
+        var isDark = false;
+        if (theme === 'dark') {
+          isDark = true;
+        } else if (theme === 'system' || !theme) {
+          isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = 'dark';
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.style.colorScheme = 'light';
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script type="module" src="/frontend/main.tsx"></script>
+</body>
+
 </html>

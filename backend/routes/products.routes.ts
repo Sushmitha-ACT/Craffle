@@ -4,6 +4,7 @@ import { locationService } from '../services/locationService.js';
 import { Product } from '../models/Product.js';
 import { Seller } from '../models/Seller.js';
 import { User } from '../models/User.js';
+import { authMiddleware, requireApprovedSeller } from '../middleware/auth.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -173,11 +174,18 @@ router.get('/api/products/:id', async (req, res) => {
        ...(product as any), 
        id: (product as any)._id.toString(), 
        name: (product as any).productName, 
-       sellerName: seller?.businessName,
+       sellerName: seller?.businessName || seller?.name || (product as any).sellerName,
        seller: seller ? {
+           id: seller._id?.toString() || seller.id,
+           name: seller.name,
+           businessName: seller.businessName || seller.shopName || seller.name,
+           shopName: seller.businessName || seller.shopName || seller.name,
+           avatar: seller.avatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150',
+           city: seller.city,
+           isVerified: seller.isVerified || seller.verificationStatus === 'Approved' || seller.adminApprovalStatus === 'APPROVED',
            address: seller.address,
-           rating: seller.rating,
-           totalReviews: seller.totalReviews,
+           rating: seller.rating || 4.9,
+           totalReviews: seller.totalReviews || 12,
            latitude: seller.latitude,
            longitude: seller.longitude,
            deliveryRadius: seller.deliveryRadius
@@ -205,12 +213,14 @@ router.get('/api/seller/products/:sellerId', async (req, res) => {
   }
 });
 
-// Add a new product (Seller only)
-router.post('/api/seller/products/add', async (req, res) => {
+// Add a new product (Seller only - requires Approved status)
+router.post('/api/seller/products/add', authMiddleware, requireApprovedSeller, async (req, res) => {
   try {
-    const { sellerId, name, category, description, price, stock, images, videoUrl, pickupAvailable, deliveryAvailable, status } = req.body;
+    const { name, category, description, price, stock, images, videoUrl, pickupAvailable, deliveryAvailable, status } = req.body;
+    const seller = (req as any).seller;
+    const sellerId = seller._id;
 
-    if (!sellerId || !name || !category || !description || price === undefined || stock === undefined) {
+    if (!name || !category || !description || price === undefined || stock === undefined) {
       return res.status(400).json({ error: 'Please enter all required product details' });
     }
     
@@ -218,9 +228,12 @@ router.post('/api/seller/products/add', async (req, res) => {
       return res.status(400).json({ error: 'At least 3 images are required' });
     }
 
-    const seller = await Seller.findById(sellerId);
-    if (!seller || seller.verificationStatus !== 'Approved') {
-      return res.status(403).json({ error: 'Approved seller profile required to add products' });
+    const isSellerApproved = (seller as any).isApproved === true || 
+      (seller as any).adminApprovalStatus === 'APPROVED' || 
+      (seller as any).verificationStatus === 'Approved';
+
+    if (!isSellerApproved) {
+      return res.status(403).json({ error: 'Your seller account must be approved by an administrator before adding products.' });
     }
 
     const savedImages = images.map((img: string, idx: number) => saveBase64File(img, `img_${idx}`));
@@ -252,14 +265,25 @@ router.post('/api/seller/products/add', async (req, res) => {
     });
 
     res.status(201).json({ message: 'Product added successfully!', product: newProduct });
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ error: 'Failed to add product: ' + err.message });
   }
 });
 
-// Edit a product (Seller only)
-router.put('/api/seller/products/edit/:id', async (req, res) => {
+// Edit a product (Seller only - requires Approved status)
+router.put('/api/seller/products/edit/:id', authMiddleware, requireApprovedSeller, async (req, res) => {
   try {
+    const seller = (req as any).seller;
+    const existing = await Product.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Ensure seller owns this product (unless ADMIN)
+    if (req.user?.role !== 'ADMIN' && existing.sellerId.toString() !== seller._id.toString()) {
+      return res.status(403).json({ error: 'Unauthorized: You do not own this product' });
+    }
+
     const updateData = { ...req.body };
     if (updateData.name) {
       updateData.productName = updateData.name;
@@ -272,22 +296,27 @@ router.put('/api/seller/products/edit/:id', async (req, res) => {
       updateData.videoUrl = saveBase64File(updateData.videoUrl, 'vid');
     }
     const updatedProduct = await Product.findByIdAndUpdate(req.params.id, updateData, { new: true });
-    if (!updatedProduct) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
     res.json({ message: 'Product updated successfully!', product: updatedProduct });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update product' });
   }
 });
 
-// Delete a product (Seller only)
-router.delete('/api/seller/products/delete/:id', async (req, res) => {
+// Delete a product (Seller only - requires Approved status)
+router.delete('/api/seller/products/delete/:id', authMiddleware, requireApprovedSeller, async (req, res) => {
   try {
-    const deletedProduct = await Product.findByIdAndDelete(req.params.id);
-    if (!deletedProduct) {
+    const seller = (req as any).seller;
+    const existing = await Product.findById(req.params.id);
+    if (!existing) {
       return res.status(404).json({ error: 'Product not found' });
     }
+
+    // Ensure seller owns this product (unless ADMIN)
+    if (req.user?.role !== 'ADMIN' && existing.sellerId.toString() !== seller._id.toString()) {
+      return res.status(403).json({ error: 'Unauthorized: You do not own this product' });
+    }
+
+    await Product.findByIdAndDelete(req.params.id);
     res.json({ message: 'Product deleted successfully!' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete product' });

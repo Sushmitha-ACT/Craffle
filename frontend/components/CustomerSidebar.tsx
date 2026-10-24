@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, MapPin, Grid, Package, Heart, Settings, User, Menu } from 'lucide-react';
+import { Home, MapPin, Grid, Package, Heart, Settings, User, Menu, Headphones } from 'lucide-react';
 
 interface SidebarProps {
   currentPage: string;
@@ -16,6 +16,7 @@ export default function CustomerSidebar({ currentPage, onNavigate, onLogout, isC
     { id: 'categories', label: 'Categories', icon: Grid },
     { id: 'orders', label: 'Orders', icon: Package },
     { id: 'wishlist', label: 'Wishlist', icon: Heart },
+    { id: 'helpdesk', label: 'Help Desk', icon: Headphones },
   ];
 
   const bottomNavItems = [

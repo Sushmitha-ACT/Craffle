@@ -1,77 +1,74 @@
-import { cashfreeClient } from '../config/cashfreeConfig.js';
 import crypto from 'crypto';
+import { verificationFactory } from './verification/verificationFactory.js';
+import { VerificationAudit } from '../models/VerificationAudit.js';
+
+function hashIdentifier(value: string): string {
+  return crypto.createHash('sha256').update(value.trim()).digest('hex');
+}
 
 export const aadhaarVerificationService = {
-  sendAadhaarOTP: async (aadhaarNumber: string) => {
-    // If not configured, mock a successful response for development
-    if (!cashfreeClient.isConfigured()) {
-      return {
-        success: true,
-        referenceId: `mock_ref_${crypto.randomBytes(8).toString('hex')}`,
-        message: 'Mock OTP sent successfully'
-      };
+  sendAadhaarOTP: async (aadhaarNumber: string, metadata?: { ipAddress?: string; userId?: string }) => {
+    const provider = verificationFactory.getActiveProvider();
+    const cleanNumber = aadhaarNumber.replace(/\s+/g, '');
+
+    // Record audit pending
+    const auditRecord = await VerificationAudit.create({
+      provider: provider.name,
+      type: 'AADHAAR',
+      status: 'PENDING',
+      idHash: hashIdentifier(cleanNumber),
+      ipAddress: metadata?.ipAddress,
+      userId: metadata?.userId as any,
+      requestData: { aadhaarSuffix: cleanNumber.slice(-4) }
+    }).catch(err => {
+      console.error('Failed to log verification audit init:', err);
+      return null;
+    });
+
+    const result = await provider.sendAadhaarOTP({
+      aadhaarNumber: cleanNumber,
+      ipAddress: metadata?.ipAddress,
+      userId: metadata?.userId
+    });
+
+    if (auditRecord) {
+      await VerificationAudit.findByIdAndUpdate(auditRecord._id, {
+        status: result.success ? 'PENDING' : 'FAILED',
+        referenceId: result.referenceId,
+        failureReason: result.success ? undefined : result.message,
+        responseData: { message: result.message, success: result.success }
+      }).catch(err => console.error('Failed to update verification audit:', err));
     }
 
-    try {
-      const response = await fetch(`${cashfreeClient.baseUrl}/aadhaar/otp`, {
-        method: 'POST',
-        headers: cashfreeClient.getHeaders(),
-        body: JSON.stringify({ aadhaar_number: aadhaarNumber })
-      });
-
-      const data = await response.json() as any;
-
-      if (!response.ok) {
-        return { success: false, message: data.message || 'Failed to send Aadhaar OTP' };
-      }
-
-      return {
-        success: true,
-        referenceId: data.reference_id,
-        message: 'OTP sent successfully'
-      };
-    } catch (error: any) {
-      console.error('Cashfree Aadhaar OTP Error:', error.message);
-      return { success: false, message: 'Provider unavailable' };
-    }
+    return result;
   },
 
-  verifyAadhaarOTP: async (otp: string, referenceId: string) => {
-    // Mock response for development
-    if (!cashfreeClient.isConfigured()) {
-      if (otp === '000000') {
-        return { success: false, message: 'Invalid OTP' };
-      }
-      return {
-        success: true,
-        verified: true,
-        message: 'Aadhaar verified successfully (Mock)',
-        referenceId
-      };
-    }
+  verifyAadhaarOTP: async (otp: string, referenceId: string, metadata?: { ipAddress?: string; userId?: string }) => {
+    const provider = verificationFactory.getActiveProvider();
 
-    try {
-      const response = await fetch(`${cashfreeClient.baseUrl}/aadhaar/verify`, {
-        method: 'POST',
-        headers: cashfreeClient.getHeaders(),
-        body: JSON.stringify({ otp, reference_id: referenceId })
-      });
+    const result = await provider.verifyAadhaarOTP({
+      otp: otp.trim(),
+      referenceId: referenceId.trim(),
+      ipAddress: metadata?.ipAddress,
+      userId: metadata?.userId
+    });
 
-      const data = await response.json() as any;
+    // Record or update audit record
+    await VerificationAudit.create({
+      provider: provider.name,
+      type: 'AADHAAR',
+      status: result.verified ? 'SUCCESS' : 'FAILED',
+      referenceId: referenceId.trim(),
+      ipAddress: metadata?.ipAddress,
+      userId: metadata?.userId as any,
+      responseData: { 
+        verified: result.verified, 
+        message: result.message,
+        hasName: Boolean(result.name)
+      },
+      failureReason: result.verified ? undefined : result.message
+    }).catch(err => console.error('Failed to log aadhaar verify audit:', err));
 
-      if (!response.ok || data.status !== 'VALID') {
-        return { success: false, message: data.message || 'Invalid OTP or verification failed' };
-      }
-
-      return {
-        success: true,
-        verified: true,
-        message: 'Aadhaar verified successfully',
-        referenceId: data.reference_id
-      };
-    } catch (error: any) {
-      console.error('Cashfree Aadhaar Verify Error:', error.message);
-      return { success: false, message: 'Provider unavailable' };
-    }
+    return result;
   }
 };

@@ -132,10 +132,10 @@ export default function AddressAutocomplete({ initialValue = '', onSelect }: Add
           onFocus={() => { if (suggestions.length > 0) setIsOpen(true); }}
           placeholder="Start typing your full address..."
           required
-          className="w-full pl-10 pr-10 py-3 bg-white border border-[#F0E6D8] rounded-xl text-[14px] text-gray-800 focus:outline-none focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 transition-all"
+          className="w-full pl-10 pr-10 py-3 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-[14px] text-[var(--text)] focus:outline-none focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 transition-all"
         />
         {isLoading && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)]">
             <Loader2 className="w-5 h-5 animate-spin" />
           </div>
         )}
@@ -143,17 +143,17 @@ export default function AddressAutocomplete({ initialValue = '', onSelect }: Add
 
       {/* Dropdown menu */}
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute z-50 w-full mt-2 bg-white border border-[#F0E6D8] rounded-xl shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-2 bg-[var(--panel)] border border-[var(--border)] rounded-xl shadow-lg max-h-60 overflow-y-auto">
           {suggestions.map((suggestion) => (
             <button
               key={suggestion.place_id}
               type="button"
               onClick={() => handleSelect(suggestion)}
-              className="w-full text-left px-4 py-3 hover:bg-[#FFF4E6] flex items-start gap-3 border-b border-[#F0E6D8] last:border-0 transition-colors"
+              className="w-full text-left px-4 py-3 hover:bg-[var(--bg-secondary)] flex items-start gap-3 border-b border-[var(--border)] last:border-0 transition-colors"
             >
-              <MapPin className="w-4 h-4 mt-1 flex-shrink-0 text-[#8C4A1D]" />
+              <MapPin className="w-4 h-4 mt-1 flex-shrink-0 text-[#FF6B35]" />
               <div className="flex-1">
-                <span className="text-[13px] text-gray-800 block line-clamp-2">
+                <span className="text-[13px] text-[var(--text)] block line-clamp-2">
                   {suggestion.display_name}
                 </span>
               </div>

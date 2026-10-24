@@ -27,9 +27,11 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import OrdersPage from './pages/OrdersPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
+import HelpDeskPage from './pages/HelpDeskPage';
 import { Product, CartItem, Order } from '@shared/types';
-import { AlertTriangle, Clock, X, Info } from 'lucide-react';
+import { AlertTriangle, Clock, X, Info, Sun, Moon } from 'lucide-react';
 import ChatbotSidebar from './components/ChatbotSidebar';
+import { useTheme } from './context/ThemeContext';
 
 // GPS helper
 const CHENNAI_DEFAULT = { name: 'OMR Road, Chennai', lat: 12.8456, lon: 80.2265 };
@@ -55,7 +57,7 @@ export default function App() {
   const [pageData, setPageData] = useState<any>(null);
 
   // Theme
-  const [isDark, setIsDark] = useState(false);
+  const { isDark, toggleTheme, syncWithBackend } = useTheme();
 
   // GPS
   const [gps, setGps] = useState(CHENNAI_DEFAULT);
@@ -107,37 +109,51 @@ export default function App() {
 
     if (savedToken && savedUser) {
       setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+      const parsedUser = JSON.parse(savedUser);
+      setUser(parsedUser);
       if (savedSeller) setSeller(JSON.parse(savedSeller));
-    }
-    if (savedDark === 'true') {
-      setIsDark(true);
-      document.documentElement.classList.add('dark');
+
+      // Refresh latest profile info and sync theme preference from secure backend
+      syncWithBackend(savedToken);
+      fetch('/api/profile/me', { headers: { 'Authorization': `Bearer ${savedToken}` } })
+        .then(res => res.ok ? res.json() : null)
+        .then(freshUser => {
+          if (freshUser) {
+            setUser((prev: any) => ({ ...(prev || {}), ...freshUser }));
+            localStorage.setItem('craffle_user', JSON.stringify({ ...parsedUser, ...freshUser }));
+          }
+        })
+        .catch(() => {});
+
+      if (parsedUser.role === 'SELLER') {
+        const uid = parsedUser.id || parsedUser._id;
+        if (uid) {
+          fetch(`/api/sellers/status/${uid}`)
+            .then(res => res.ok ? res.json() : null)
+            .then(statusData => {
+              if (statusData) {
+                setSeller((prev: any) => {
+                  const updated = { ...(prev || {}), ...statusData };
+                  localStorage.setItem('craffle_seller', JSON.stringify(updated));
+                  return updated;
+                });
+              }
+            })
+            .catch(() => { });
+        }
+      }
     }
     if (savedCart) {
-      try { setCart(JSON.parse(savedCart)); } catch {}
+      try { setCart(JSON.parse(savedCart)); } catch { }
     }
   }, []);
 
-  // Fetch settings from DB on login / token initialization
+  // Sync user theme preferences from backend when token changes
   useEffect(() => {
     if (token) {
-      fetch('/api/settings', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      .then(res => res.json())
-      .then(settings => {
-        if (settings && settings.darkMode !== undefined) {
-          setIsDark(settings.darkMode);
-          document.documentElement.classList.toggle('dark', settings.darkMode);
-          localStorage.setItem('craffle_dark', String(settings.darkMode));
-        }
-      })
-      .catch(err => console.error('Failed to load settings:', err));
+      syncWithBackend(token);
     }
-  }, [token]);
+  }, [token, syncWithBackend]);
 
   // Save cart to localStorage
   useEffect(() => {
@@ -210,7 +226,7 @@ export default function App() {
         const data = await res.json();
         setProducts(data);
       }
-    } catch {}
+    } catch { }
   };
 
   const fetchNotificationCount = async (isInitial: boolean = false) => {
@@ -242,7 +258,7 @@ export default function App() {
           }
         }
       }
-    } catch {}
+    } catch { }
   };
 
   const fetchWishlist = async () => {
@@ -253,7 +269,7 @@ export default function App() {
       const res = await fetch(`/api/wishlist/${uid}`);
       const data = await res.json();
       if (Array.isArray(data)) setWishlistIds(new Set(data.map((p: any) => p.id)));
-    } catch {}
+    } catch { }
   };
 
   const fetchOrders = async () => {
@@ -264,7 +280,7 @@ export default function App() {
       const res = await fetch(`/api/orders/customer/${uid}`);
       const data = await res.json();
       if (Array.isArray(data)) setOrders(data);
-    } catch {}
+    } catch { }
   };
 
   // ==========================================
@@ -306,26 +322,7 @@ export default function App() {
   // ==========================================
   // DARK MODE
   // ==========================================
-  const toggleDark = () => {
-    setIsDark(prev => {
-      const next = !prev;
-      document.documentElement.classList.toggle('dark', next);
-      localStorage.setItem('craffle_dark', String(next));
-
-      if (token) {
-        fetch('/api/settings', {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ darkMode: next })
-        }).catch(err => console.error('Failed to save dark mode setting:', err));
-      }
-
-      return next;
-    });
-  };
+  const toggleDark = toggleTheme;
 
   // ==========================================
   // NAVIGATION
@@ -505,6 +502,7 @@ export default function App() {
             total: details.total,
             address: details.address,
             phone: details.phone,
+            paymentId: newOrder.paymentId || 'payment_online',
             createdAt: new Date().toISOString(),
           };
           return trackingOrder;
@@ -534,7 +532,7 @@ export default function App() {
         setSelectedOrder(null);
         fetchNotificationCount();
       }
-    } catch {}
+    } catch { }
   };
 
   // ==========================================
@@ -590,7 +588,7 @@ export default function App() {
         handleLogout();
         showToast('Database reset to initial state!', 'success');
       }
-    } catch {}
+    } catch { }
   };
 
   // ==========================================
@@ -603,7 +601,7 @@ export default function App() {
   // Not logged in
   if (!token) {
     return (
-      <div className="relative min-h-screen" style={{ background: 'var(--bg)' }}>
+      <div className="relative min-h-screen bg-[var(--bg)] transition-colors duration-200">
         <Auth onLoginSuccess={handleLoginSuccess} showToast={showToast} />
         <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
           {toasts.map(t => (
@@ -625,6 +623,108 @@ export default function App() {
   const renderPage = () => {
     // Seller dashboard
     if (user.role === 'SELLER' && seller) {
+      const isApprovedSeller = seller.adminApprovalStatus === 'APPROVED' ||
+        seller.verificationStatus === 'Approved' ||
+        seller.isApproved === true;
+
+      // If seller application is pending or rejected, render the application status view
+      if (!isApprovedSeller) {
+        return (
+          <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center p-4 sm:p-8 font-sans text-[var(--text)]">
+            <div className="w-full max-w-lg bg-[var(--panel)] rounded-3xl p-8 shadow-sm border border-[var(--border)] text-center space-y-6">
+              {seller.adminApprovalStatus === 'REJECTED' ? (
+                <>
+                  <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto border border-red-500/20">
+                    <span className="text-2xl font-bold">✕</span>
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 bg-red-500/10 text-red-500 border border-red-500/20 rounded-full">
+                      Application Rejected
+                    </span>
+                    <h2 className="text-2xl font-bold text-[var(--text)]">Application Needs Attention</h2>
+                    <p className="text-sm text-[var(--text-secondary)]">
+                      An administrator has reviewed your seller application for <b>{seller.businessName}</b> and determined that changes are needed before approval.
+                    </p>
+                  </div>
+                  {seller.rejectionReason && (
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-left text-xs text-red-400">
+                      <p className="font-bold mb-1">Reason for rejection:</p>
+                      <p className="italic">"{seller.rejectionReason}"</p>
+                    </div>
+                  )}
+                  <p className="text-xs text-[var(--muted)]">
+                    Please contact our support team or submit an updated registration once required corrections have been made.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto border border-amber-500/20 animate-pulse">
+                    <span className="text-2xl font-bold">⏳</span>
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full">
+                      Review Pending
+                    </span>
+                    <h2 className="text-2xl font-bold text-[var(--text)]">Application Awaiting Approval</h2>
+                    <p className="text-sm text-[var(--text-secondary)]">
+                      Your seller application for <b>{seller.businessName}</b> has been received and is currently under manual admin review.
+                    </p>
+                  </div>
+                  <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 text-left text-xs text-[var(--text)] space-y-1">
+                    <p className="font-bold">What happens next?</p>
+                    <p>• A Craffle administrator will review your kitchen address, business info, and settlement details.</p>
+                    <p>• Once approved, you will be granted access to the Seller Dashboard, inventory, and order fulfillment features.</p>
+                  </div>
+                </>
+              )}
+
+              <div className="pt-2 flex flex-col gap-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      const uid = user.id || user._id;
+                      const res = await fetch(`/api/sellers/status/${uid}`);
+                      if (res.ok) {
+                        const statusData = await res.json();
+                        const isNowApproved = statusData.adminApprovalStatus === 'APPROVED' ||
+                          statusData.verificationStatus === 'Approved' ||
+                          statusData.isApproved === true;
+                        setSeller((prev: any) => {
+                          const updated = {
+                            ...prev,
+                            ...statusData,
+                            isApproved: isNowApproved,
+                            adminApprovalStatus: isNowApproved ? 'APPROVED' : statusData.adminApprovalStatus
+                          };
+                          localStorage.setItem('craffle_seller', JSON.stringify(updated));
+                          return updated;
+                        });
+                        if (isNowApproved) {
+                          showToast('Congratulations! Your seller account has been approved!', 'success');
+                        } else {
+                          showToast('Application is still pending review.', 'info');
+                        }
+                      }
+                    } catch {
+                      showToast('Could not refresh status.', 'error');
+                    }
+                  }}
+                  className="w-full bg-[#FF6B35] hover:bg-[#E65A2A] text-white font-bold py-3 rounded-xl transition-colors text-sm"
+                >
+                  Refresh Application Status ⟳
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 rounded-xl transition-colors text-sm"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
       if (currentPage === 'product-detail' && selectedProduct) {
         return (
           <ProductDetailPage
@@ -731,34 +831,42 @@ export default function App() {
 
       case 'orders':
         return (
-          <OrdersPage 
-            orders={orders} 
-            onSelectOrder={(order) => { setSelectedOrder(order); setCurrentPage('order-tracking'); }} 
+          <OrdersPage
+            orders={orders}
+            onSelectOrder={(order) => { setSelectedOrder(order); setCurrentPage('order-tracking'); }}
           />
         );
 
       case 'profile':
         return (
-          <ProfilePage 
-            user={user} 
-            token={token} 
+          <ProfilePage
+            user={user}
+            token={token}
             showToast={showToast}
             onUserUpdate={(updatedUser: any) => {
               setUser(updatedUser);
               localStorage.setItem('craffle_user', JSON.stringify(updatedUser));
-            }} 
+            }}
           />
         );
 
       case 'settings':
         return (
-          <SettingsPage 
-            user={user} 
-            token={token} 
+          <SettingsPage
+            user={user}
+            token={token}
             showToast={showToast}
-            onLogout={handleLogout} 
+            onLogout={handleLogout}
             isDark={isDark}
             toggleDark={toggleDark}
+          />
+        );
+
+      case 'helpdesk':
+        return (
+          <HelpDeskPage
+            user={user}
+            token={token!}
           />
         );
 
@@ -769,6 +877,7 @@ export default function App() {
               order={selectedOrder}
               onBack={() => handleNavigate('orders')}
               onCancelOrder={handleCancelOrder}
+              onNavigate={handleNavigate}
             />
           );
         }
@@ -923,10 +1032,10 @@ export default function App() {
       ]}
     >
       {renderPage()}
-      
+
       {/* Chatbot Sidebar */}
       {user && user.role === 'CUSTOMER' && <ChatbotSidebar />}
-      
+
       {/* Toast Notifications */}
       <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
         {toasts.map(t => (

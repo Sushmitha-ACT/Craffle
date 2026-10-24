@@ -47,6 +47,8 @@ export interface User {
   provider?: 'manual' | 'google';
   googleId?: string;
   avatar?: string;
+  profileImage?: string;
+  phone?: string;
   createdAt: string;
 }
 
@@ -122,10 +124,12 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
-  customerId: string;
-  customerName: string;
-  sellerId: string;
+  customerId?: string;
+  customerName?: string;
+  sellerId?: string;
   sellerName: string;
+  sellerAddress?: string;
+  sellerPhone?: string;
   items: OrderItem[];
   total: number;
   deliveryCharge?: number;
@@ -134,6 +138,7 @@ export interface Order {
   fulfillmentMethod: 'DELIVERY' | 'SELF_PICKUP';
   address: string;
   phone: string;
+  paymentId?: string;
   customerLocation?: { latitude: number; longitude: number };
   sellerLocation?: { latitude: number; longitude: number };
   distanceKm?: number;

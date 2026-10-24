@@ -16,15 +16,43 @@ import supportRoutes from './routes/support.routes.js';
 import geminiRoutes from './routes/gemini.routes.js';
 import debugRoutes from './routes/debug.routes.js';
 import profileRoutes from './routes/profile.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
+app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
 
 // Connect to MongoDB
 const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/craffle';
 console.log('Connecting to MongoDB:', uri.replace(/:([^@]+)@/, ':****@'));
 mongoose.connect(uri)
-  .then(() => console.log('Connected to MongoDB successfully'))
+  .then(async () => {
+    console.log('Connected to MongoDB successfully');
+    try {
+      const { Seller } = await import('./models/Seller.js');
+      const updateResult = await Seller.updateMany(
+        {
+          $or: [
+            { adminApprovalStatus: 'APPROVED' },
+            { verificationStatus: 'Approved' }
+          ]
+        },
+        {
+          $set: {
+            adminApprovalStatus: 'APPROVED',
+            verificationStatus: 'Approved',
+            isApproved: true,
+            rejectionReason: ''
+          }
+        }
+      );
+      if (updateResult.modifiedCount > 0) {
+        console.log(`[Startup Sync] Backfilled isApproved=true for ${updateResult.modifiedCount} approved seller(s)`);
+      }
+    } catch (err) {
+      console.warn('[Startup Sync] Seller sync warning:', err);
+    }
+  })
   .catch(err => console.error('MongoDB connection error:', err));
 
 
@@ -44,6 +72,7 @@ app.use(supportRoutes);
 app.use(geminiRoutes);
 app.use(debugRoutes);
 app.use(profileRoutes);
+app.use(paymentRoutes);
 
 
 // 12. VITE MIDDLEWARE & STATIC ASSET INGRESS

@@ -17,10 +17,10 @@ export default function ProductCard({ product, onView, onAddToCart, onToggleWish
   return (
     <div 
       onClick={() => onView && onView(product)}
-      className="w-full bg-white border border-[#EAEAEA] rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col group hover:-translate-y-1"
+      className="w-full bg-[var(--panel)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col group hover:-translate-y-1 text-[var(--text)]"
     >
       {/* Image Container */}
-      <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden border-b border-gray-100 flex-shrink-0">
+      <div className="relative aspect-[4/3] bg-[var(--bg-secondary)] overflow-hidden border-b border-[var(--border)] flex-shrink-0">
         {(() => {
           const cat = (product.category || '').toLowerCase();
           let defaultImg = 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600&auto=format&fit=crop&q=80';
@@ -52,20 +52,20 @@ export default function ProductCard({ product, onView, onAddToCart, onToggleWish
         {/* Wishlist Button */}
         <button 
           onClick={(e) => { e.stopPropagation(); onToggleWishlist && onToggleWishlist(product.id || ''); }}
-          className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:bg-white hover:text-red-500 transition-colors z-10"
+          className="absolute top-3 right-3 w-8 h-8 bg-[var(--panel)]/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:bg-[var(--panel)] hover:text-red-500 border border-[var(--border)] transition-colors z-10"
         >
-          <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} />
+          <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-[var(--muted)]'}`} />
         </button>
 
         {/* Free Delivery Tag over Image - Optional based on price logic */}
         {product.price > 500 ? (
-          <div className="absolute bottom-3 left-3 flex items-center gap-1 text-[11px] font-bold text-white bg-[#00B44B] px-2.5 py-1 rounded-md shadow-sm z-10">
+          <div className="absolute bottom-3 left-3 flex items-center gap-1 text-[11px] font-bold text-white bg-emerald-600 px-2.5 py-1 rounded-md shadow-sm z-10">
             <Truck className="w-3.5 h-3.5" />
             Free Delivery
           </div>
         ) : (
-          <div className="absolute bottom-3 left-3 flex items-center gap-1 text-[11px] font-bold text-gray-700 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md shadow-sm z-10">
-            <Truck className="w-3.5 h-3.5 text-gray-500" />
+          <div className="absolute bottom-3 left-3 flex items-center gap-1 text-[11px] font-bold text-[var(--text)] bg-[var(--panel)]/90 backdrop-blur-sm border border-[var(--border)] px-2.5 py-1 rounded-md shadow-sm z-10">
+            <Truck className="w-3.5 h-3.5 text-[var(--muted)]" />
             Delivery available
           </div>
         )}
@@ -79,45 +79,45 @@ export default function ProductCard({ product, onView, onAddToCart, onToggleWish
         </div>
         
         {/* Title */}
-        <h3 className="font-bold text-[#1F2937] text-[15px] mb-1.5 leading-snug line-clamp-2">
+        <h3 className="font-bold text-[var(--text)] text-[15px] mb-1.5 leading-snug line-clamp-2">
           {product.name}
         </h3>
 
         {/* Description */}
         {product.description && (
-          <p className="text-xs text-gray-500 line-clamp-2 mb-3 leading-relaxed">
+          <p className="text-xs text-[var(--text-secondary)] line-clamp-2 mb-3 leading-relaxed">
             {product.description}
           </p>
         )}
         
         {/* Ratings & Seller */}
-        <div className="flex items-center gap-1.5 mt-1 mb-1.5 text-[12px] font-medium text-gray-600">
+        <div className="flex items-center gap-1.5 mt-1 mb-1.5 text-[12px] font-medium text-[var(--text-secondary)]">
           {hasReviews ? (
             <>
               <Star className="w-3.5 h-3.5 fill-[#FF6B35] text-[#FF6B35]" />
               <span>{product.rating} ({product.totalReviews})</span>
             </>
           ) : (
-            <span className="text-gray-400 italic">No reviews yet</span>
+            <span className="text-[var(--muted)] italic">No reviews yet</span>
           )}
-          <span className="text-gray-300">·</span>
-          <span className="truncate max-w-[120px] font-semibold text-gray-700">🏪 {product.sellerName || 'Local Creator'}</span>
+          <span className="text-[var(--border)]">·</span>
+          <span className="truncate max-w-[120px] font-semibold text-[var(--text)]">🏪 {product.sellerName || 'Local Creator'}</span>
         </div>
 
         {/* Distance */}
         {Boolean(product.distance) && (
-          <div className="flex items-center gap-1 text-[12px] font-medium text-[#00B44B] mb-4">
+          <div className="flex items-center gap-1 text-[12px] font-medium text-emerald-500 mb-4">
             <MapPin className="w-3 h-3" /> {product.distance} km away
           </div>
         )}
         
         {/* Price & Action */}
-        <div className="mt-auto pt-4 flex items-center justify-between gap-2 border-t border-gray-50">
+        <div className="mt-auto pt-4 flex items-center justify-between gap-2 border-t border-[var(--border)]">
           <span className="font-extrabold text-[#FF6B35] text-[18px]">₹{product.price}</span>
           <div className="flex gap-2">
             <button 
               onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(product); }}
-              className="bg-[#F8F9FA] hover:bg-gray-100 border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-colors"
+              className="bg-[var(--bg-secondary)] hover:bg-[var(--border)] border border-[var(--border)] text-[var(--text)] px-3 py-1.5 rounded-lg text-[12px] font-bold transition-colors"
             >
               Add
             </button>

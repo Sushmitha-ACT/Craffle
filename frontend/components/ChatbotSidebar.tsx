@@ -116,33 +116,33 @@ export default function ChatbotSidebar() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 400, opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-            className="w-[360px] h-[550px] max-h-[85vh] rounded-3xl overflow-hidden shadow-2xl border border-gray-100 flex flex-col"
+            className="w-[360px] h-[550px] max-h-[85vh] rounded-3xl overflow-hidden shadow-2xl border border-[var(--border)] flex flex-col"
             style={{
-              background: 'rgba(255, 255, 255, 0.9)',
+              background: 'var(--panel)',
               backdropFilter: 'blur(20px)',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
-              borderColor: 'rgba(255, 107, 53, 0.1)'
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.25)',
+              borderColor: 'var(--border)'
             }}
           >
             {/* Header */}
-            <div className="p-4 flex items-center justify-between border-b border-gray-100/60"
-              style={{ background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.05) 0%, rgba(255, 143, 94, 0.05) 100%)' }}>
+            <div className="p-4 flex items-center justify-between border-b border-[var(--border)]"
+              style={{ background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.08) 0%, rgba(255, 143, 94, 0.05) 100%)' }}>
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FF6B35] to-[#FF8F5E] flex items-center justify-center text-white">
                   <Bot className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-sm text-gray-900 flex items-center gap-1">
+                  <h3 className="font-extrabold text-sm text-[var(--text)] flex items-center gap-1">
                     Craffle AI Bot <Sparkles className="w-3.5 h-3.5 text-[#FF6B35] fill-current" />
                   </h3>
-                  <span className="text-[10px] text-green-600 font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Online
+                  <span className="text-[10px] text-emerald-500 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Online
                   </span>
                 </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+                className="p-1.5 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors text-[var(--muted)] hover:text-[var(--text)]"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -156,7 +156,7 @@ export default function ChatbotSidebar() {
                     className={`max-w-[82%] p-3.5 rounded-2xl text-sm leading-relaxed ${
                       m.sender === 'user'
                         ? 'bg-gradient-to-tr from-[#FF6B35] to-[#FF8F5E] text-white rounded-tr-none'
-                        : 'bg-white text-gray-800 border border-gray-100/80 rounded-tl-none shadow-sm'
+                        : 'bg-[var(--bg-secondary)] text-[var(--text)] border border-[var(--border)] rounded-tl-none shadow-sm'
                     }`}
                   >
                     {m.text}
@@ -166,7 +166,7 @@ export default function ChatbotSidebar() {
 
               {isTyping && (
                 <div className="flex justify-start">
-                  <div className="bg-white border border-gray-100/80 p-3 rounded-2xl rounded-tl-none flex items-center gap-1.5 shadow-sm">
+                  <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-3 rounded-2xl rounded-tl-none flex items-center gap-1.5 shadow-sm">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B35]/60 animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B35]/60 animate-bounce" style={{ animationDelay: '150ms' }} />
                     <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B35]/60 animate-bounce" style={{ animationDelay: '300ms' }} />
@@ -177,12 +177,12 @@ export default function ChatbotSidebar() {
             </div>
 
             {/* Suggestion Chips */}
-            <div className="px-4 py-2 flex gap-1.5 overflow-x-auto whitespace-nowrap scrollbar-none border-t border-gray-50 bg-gray-50/40">
+            <div className="px-4 py-2 flex gap-1.5 overflow-x-auto whitespace-nowrap scrollbar-none border-t border-[var(--border)] bg-[var(--bg-secondary)]">
               {SUGGESTIONS.map(s => (
                 <button
                   key={s}
                   onClick={() => handleSendMessage(s)}
-                  className="px-3 py-1.5 bg-white border border-gray-200/80 rounded-full text-xs font-bold text-gray-600 hover:border-[#FF6B35] hover:text-[#FF6B35] hover:bg-[#FF6B35]/5 transition-all cursor-pointer"
+                  className="px-3 py-1.5 bg-[var(--panel)] border border-[var(--border)] rounded-full text-xs font-bold text-[var(--text)] hover:border-[#FF6B35] hover:text-[#FF6B35] transition-all cursor-pointer"
                 >
                   {s}
                 </button>
@@ -190,7 +190,7 @@ export default function ChatbotSidebar() {
             </div>
 
             {/* Message Input Box */}
-            <div className="p-3 border-t border-gray-100/60 bg-white">
+            <div className="p-3 border-t border-[var(--border)] bg-[var(--panel)]">
               <form
                 onSubmit={e => {
                   e.preventDefault();
@@ -203,7 +203,7 @@ export default function ChatbotSidebar() {
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   placeholder="Ask a question..."
-                  className="flex-1 px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#FF6B35] focus:bg-white transition-all font-medium"
+                  className="flex-1 px-3.5 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-xs text-[var(--text)] placeholder-[var(--muted)] focus:outline-none focus:border-[#FF6B35] focus:bg-[var(--panel)] transition-all font-medium"
                 />
                 <button
                   type="submit"

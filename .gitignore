@@ -26,3 +26,8 @@ clear_my_orders.cjs
 reseed_products.cjs
 seed_local.cjs
 test_nominatim.js
+scratch/
+
+# Build and cache
+.vite/
+
