@@ -9,9 +9,10 @@ import { OtpVerification } from '../models/OtpVerification.js';
 import { Notification } from '../models/Notification.js';
 import nodemailer from 'nodemailer';
 
+import { JWT_SECRET } from '../middleware/auth.js';
+
 const router = express.Router();
 
-const JWT_SECRET = 'craffle_ultra_secure_jwt_token_secret_12345';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const googleOAuthClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
@@ -60,7 +61,15 @@ router.post('/api/auth/register', async (req, res) => {
     if (password !== confirmPassword) return res.status(400).json({ error: 'Passwords do not match' });
 
     const existingUser = await User.findOne({ email: email.toLowerCase() });
-    if (existingUser) return res.status(400).json({ error: 'Email already registered' });
+    if (existingUser) {
+      if (role === UserRole.SELLER && existingUser.password && bcrypt.compareSync(password, existingUser.password)) {
+        await User.updateOne({ _id: existingUser._id }, { role: UserRole.SELLER });
+        const token = jwt.sign({ id: existingUser._id, role: UserRole.SELLER }, JWT_SECRET, { expiresIn: '7d' });
+        const mappedUser = { ...existingUser.toObject(), id: existingUser._id.toString(), role: UserRole.SELLER };
+        return res.json({ message: 'User account linked for seller registration', token, user: mappedUser });
+      }
+      return res.status(400).json({ error: 'This email is already registered. If you already have an account, enter its correct password to register as a seller.' });
+    }
 
     const targetRole = role === UserRole.SELLER ? UserRole.SELLER : UserRole.CUSTOMER;
     const hashedPassword = bcrypt.hashSync(password, 10);
@@ -173,7 +182,22 @@ router.post('/api/auth/login', async (req, res) => {
     if (user.role === 'SELLER') {
       const { Seller } = await import('../models/Seller.js');
       const sellerDoc = await Seller.findOne({ userId: user._id });
-      if (sellerDoc) seller = { ...sellerDoc.toObject(), id: sellerDoc._id.toString() };
+      if (sellerDoc) {
+        const isApproved = (sellerDoc as any).isApproved === true || 
+          (sellerDoc as any).adminApprovalStatus === 'APPROVED' || 
+          (sellerDoc as any).verificationStatus === 'Approved';
+
+        if (isApproved && (!(sellerDoc as any).isApproved || (sellerDoc as any).adminApprovalStatus !== 'APPROVED')) {
+          await Seller.updateOne({ _id: sellerDoc._id }, { isApproved: true, adminApprovalStatus: 'APPROVED' }).catch(() => {});
+        }
+
+        seller = { 
+          ...sellerDoc.toObject(), 
+          id: sellerDoc._id.toString(),
+          adminApprovalStatus: isApproved ? 'APPROVED' : ((sellerDoc as any).adminApprovalStatus || 'PENDING'),
+          isApproved
+        };
+      }
     }
 
     res.json({ message: 'Login successful', token, user: mappedUser, seller });
@@ -219,7 +243,22 @@ router.post('/api/auth/google', async (req, res) => {
     if (user.role === 'SELLER') {
       const { Seller } = await import('../models/Seller.js');
       const sellerDoc = await Seller.findOne({ userId: user._id });
-      if (sellerDoc) seller = { ...sellerDoc.toObject(), id: sellerDoc._id.toString() };
+      if (sellerDoc) {
+        const isApproved = (sellerDoc as any).isApproved === true || 
+          (sellerDoc as any).adminApprovalStatus === 'APPROVED' || 
+          (sellerDoc as any).verificationStatus === 'Approved';
+
+        if (isApproved && (!(sellerDoc as any).isApproved || (sellerDoc as any).adminApprovalStatus !== 'APPROVED')) {
+          await Seller.updateOne({ _id: sellerDoc._id }, { isApproved: true, adminApprovalStatus: 'APPROVED' }).catch(() => {});
+        }
+
+        seller = { 
+          ...sellerDoc.toObject(), 
+          id: sellerDoc._id.toString(),
+          adminApprovalStatus: isApproved ? 'APPROVED' : ((sellerDoc as any).adminApprovalStatus || 'PENDING'),
+          isApproved
+        };
+      }
     }
 
     res.json({ message: 'Google Auth successful', token, user: mappedUser, seller });

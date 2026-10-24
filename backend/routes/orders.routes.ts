@@ -29,6 +29,15 @@ router.post('/api/orders', async (req, res) => {
       return res.status(400).json({ error: 'Missing required order details' });
     }
 
+    // Normalize fulfillmentMethod to canonical enum ('DELIVERY' | 'SELF_PICKUP')
+    const normalizedMethod = String(fulfillmentMethod).toUpperCase() === 'SELF_PICKUP' || String(fulfillmentMethod).toLowerCase() === 'pickup' || String(fulfillmentMethod).toLowerCase() === 'self-pickup'
+      ? 'SELF_PICKUP'
+      : 'DELIVERY';
+
+    if (!['DELIVERY', 'SELF_PICKUP'].includes(normalizedMethod)) {
+      return res.status(400).json({ error: `Invalid fulfillmentMethod: ${fulfillmentMethod}. Expected DELIVERY or SELF_PICKUP.` });
+    }
+
     const { sourcePage } = req.body;
     if (fulfillmentMethod === 'SELF_PICKUP' && sourcePage !== 'nearby' && customerLocation?.latitude && customerLocation?.longitude) {
       const seller = await Seller.findById(finalSellerId);
@@ -47,19 +56,19 @@ router.post('/api/orders', async (req, res) => {
       sellerId: finalSellerId,
       products,
       paymentId,
-      fulfillmentMethod,
+      fulfillmentMethod: normalizedMethod,
       address,
       phone,
       customerLocation,
       sellerLocation,
       distanceKm,
       totalAmount,
-      orderStatus: fulfillmentMethod === 'SELF_PICKUP' ? 'Pending' : 'Confirmed'
+      orderStatus: normalizedMethod === 'SELF_PICKUP' ? 'Pending' : 'Confirmed'
     });
 
     const sellerObj = await Seller.findById(finalSellerId);
     if (sellerObj && sellerObj.userId) {
-      const isPickup = fulfillmentMethod === 'SELF_PICKUP';
+      const isPickup = normalizedMethod === 'SELF_PICKUP';
       // Notify seller about the new order/request
       await Notification.create({
         userId: sellerObj.userId,
@@ -71,8 +80,8 @@ router.post('/api/orders', async (req, res) => {
     // Notify the customer that their request/order was received
     await Notification.create({
       userId: customerId,
-      title: fulfillmentMethod === 'SELF_PICKUP' ? '📍 Pickup Request Sent!' : '✅ Order Placed Successfully!',
-      message: fulfillmentMethod === 'SELF_PICKUP'
+      title: normalizedMethod === 'SELF_PICKUP' ? '📍 Pickup Request Sent!' : '✅ Order Placed Successfully!',
+      message: normalizedMethod === 'SELF_PICKUP'
         ? `Your self-pickup request #${newOrder._id.toString().slice(-6)} has been sent to the seller. You'll be notified once they respond.`
         : `Your order #${newOrder._id.toString().slice(-6)} has been confirmed and is being prepared.`
     });
@@ -87,27 +96,106 @@ router.post('/api/orders', async (req, res) => {
 router.get('/api/orders/customer/:customerId', async (req, res) => {
   try {
     const orders = await Order.find({ customerId: req.params.customerId as any })
-      .populate('sellerId', 'businessName')
-      .populate('products.productId', 'productName')
+      .populate('sellerId', 'businessName address phone latitude longitude')
+      .populate('products.productId', 'productName image price')
       .sort({ createdAt: -1 })
       .lean();
 
-    const mappedOrders = orders.map((o: any) => ({
-      id: o._id.toString(),
-      sellerName: o.sellerId?.businessName || 'Unknown Seller',
-      status: o.orderStatus,
-      items: o.products.map((p: any) => ({
-        name: p.productId?.productName || 'Unknown Product',
-        quantity: p.quantity,
-        price: p.price
-      })),
-      createdAt: o.createdAt,
-      total: o.totalAmount
-    }));
+    const mappedOrders = orders.map((o: any) => {
+      const fulfillmentMethod = (o.fulfillmentMethod && String(o.fulfillmentMethod).toUpperCase() === 'SELF_PICKUP')
+        ? 'SELF_PICKUP'
+        : 'DELIVERY';
+
+      const sellerLocation = o.sellerLocation && o.sellerLocation.latitude
+        ? o.sellerLocation
+        : (o.sellerId?.latitude && o.sellerId?.longitude ? {
+            latitude: parseFloat(o.sellerId.latitude),
+            longitude: parseFloat(o.sellerId.longitude)
+          } : undefined);
+
+      return {
+        id: o._id.toString(),
+        customerId: o.customerId?.toString(),
+        sellerId: o.sellerId?._id?.toString() || o.sellerId?.toString(),
+        sellerName: o.sellerId?.businessName || 'Craffle Creator',
+        sellerAddress: o.sellerId?.address || '',
+        sellerPhone: o.sellerId?.phone || '',
+        sellerLocation,
+        customerLocation: o.customerLocation,
+        status: o.orderStatus || 'Pending',
+        fulfillmentMethod,
+        address: o.address || '',
+        phone: o.phone || '',
+        paymentId: o.paymentId || '',
+        distanceKm: o.distanceKm,
+        items: (o.products || []).map((p: any) => ({
+          productId: p.productId?._id?.toString() || p.productId?.toString(),
+          name: p.productId?.productName || 'Homemade Creation',
+          quantity: p.quantity,
+          price: p.price,
+          image: p.productId?.image
+        })),
+        createdAt: o.createdAt,
+        total: o.totalAmount
+      };
+    });
 
     res.json(mappedOrders);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch orders' });
+    res.status(500).json({ error: 'Failed to fetch orders: ' + err.message });
+  }
+});
+
+// Get single order by ID
+router.get('/api/orders/:orderId', async (req, res) => {
+  try {
+    const o = await Order.findById(req.params.orderId as any)
+      .populate('sellerId', 'businessName address phone latitude longitude')
+      .populate('products.productId', 'productName image price')
+      .lean();
+
+    if (!o) return res.status(404).json({ error: 'Order not found' });
+
+    const fulfillmentMethod = (o.fulfillmentMethod && String(o.fulfillmentMethod).toUpperCase() === 'SELF_PICKUP')
+      ? 'SELF_PICKUP'
+      : 'DELIVERY';
+
+    const sellerLocation = o.sellerLocation && o.sellerLocation.latitude
+      ? o.sellerLocation
+      : (o.sellerId?.latitude && o.sellerId?.longitude ? {
+          latitude: parseFloat(o.sellerId.latitude),
+          longitude: parseFloat(o.sellerId.longitude)
+        } : undefined);
+
+    const mappedOrder = {
+      id: o._id.toString(),
+      customerId: o.customerId?.toString(),
+      sellerId: o.sellerId?._id?.toString() || o.sellerId?.toString(),
+      sellerName: o.sellerId?.businessName || 'Craffle Creator',
+      sellerAddress: o.sellerId?.address || '',
+      sellerPhone: o.sellerId?.phone || '',
+      sellerLocation,
+      customerLocation: o.customerLocation,
+      status: o.orderStatus || 'Pending',
+      fulfillmentMethod,
+      address: o.address || '',
+      phone: o.phone || '',
+      paymentId: o.paymentId || '',
+      distanceKm: o.distanceKm,
+      items: (o.products || []).map((p: any) => ({
+        productId: p.productId?._id?.toString() || p.productId?.toString(),
+        name: p.productId?.productName || 'Homemade Creation',
+        quantity: p.quantity,
+        price: p.price,
+        image: p.productId?.image
+      })),
+      createdAt: o.createdAt,
+      total: o.totalAmount
+    };
+
+    res.json(mappedOrder);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch order: ' + err.message });
   }
 });
 
