@@ -180,17 +180,17 @@ export default function NearbyPage({ onViewProduct, onAddToCart, showToast, onTo
   if (!locationGranted) {
     return (
       <div className="p-4 lg:p-8 animate-fade-in w-full max-w-7xl mx-auto h-[80vh] flex flex-col items-center justify-center">
-        <div className="max-w-md w-full bg-white p-8 rounded-3xl border border-gray-200 shadow-xl text-center space-y-6">
-          <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto text-[#FF6B35]">
+        <div className="max-w-md w-full bg-[var(--panel)] p-8 rounded-3xl border border-[var(--border)] shadow-xl text-center space-y-6 text-[var(--text)]">
+          <div className="w-20 h-20 bg-orange-500/10 border border-orange-500/20 rounded-full flex items-center justify-center mx-auto text-[#FF6B35]">
             <MapPin className="w-10 h-10" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Find Local Creators</h1>
-            <p className="text-sm text-gray-500">We need your location to show you homemade food and crafts available in your neighborhood.</p>
+            <h1 className="text-2xl font-bold text-[var(--text)] mb-2">Find Local Creators</h1>
+            <p className="text-sm text-[var(--text-secondary)]">We need your location to show you homemade food and crafts available in your neighborhood.</p>
           </div>
           
           {locationError && (
-            <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-semibold flex items-center gap-2 text-left">
+            <div className="p-3 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-xs font-semibold flex items-center gap-2 text-left">
               <AlertCircle className="w-4 h-4 shrink-0" />
               {locationError}
             </div>
@@ -210,11 +210,11 @@ export default function NearbyPage({ onViewProduct, onAddToCart, showToast, onTo
   }
 
   return (
-    <div className="p-4 lg:p-8 animate-fade-in w-full max-w-7xl mx-auto h-full flex flex-col transition-colors duration-200">
+    <div className="w-full px-6 lg:px-10 py-8 animate-fade-in flex flex-col transition-colors duration-200">
       <div className="mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text)] mb-1 transition-colors duration-200">Creators Near You</h1>
-          <p className="text-sm text-[var(--text-secondary)] transition-colors duration-200">Explore verified home creators within {mapRadius}km of your location.</p>
+          <h1 className="text-3xl font-extrabold text-[var(--text)] mb-1.5 tracking-tight transition-colors duration-200">Creators Near You</h1>
+          <p className="text-[15px] text-[var(--text-secondary)] transition-colors duration-200">Explore verified home creators within {mapRadius}km of your location.</p>
         </div>
         
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
@@ -223,12 +223,12 @@ export default function NearbyPage({ onViewProduct, onAddToCart, showToast, onTo
             placeholder="Search products or shops..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full sm:w-64 px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text)] text-sm focus:outline-none focus:border-[#FF6B35] transition-colors duration-200"
+            className="w-full sm:w-72 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text)] text-[15px] focus:outline-none focus:border-[#FF6B35] transition-colors duration-200 shadow-sm"
           />
           <select 
             value={selectedCategory} 
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full sm:w-auto px-4 py-2 rounded-xl border border-[var(--border)] text-sm bg-[var(--bg-secondary)] text-[var(--text)] focus:outline-none focus:border-[#FF6B35] transition-colors duration-200"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[var(--border)] text-[15px] font-medium bg-[var(--bg-secondary)] text-[var(--text)] focus:outline-none focus:border-[#FF6B35] transition-colors duration-200 shadow-sm"
           >
             {categories.map(c => <option key={c} value={c} className="bg-[var(--panel)] text-[var(--text)]">{c}</option>)}
           </select>
@@ -373,12 +373,12 @@ export default function NearbyPage({ onViewProduct, onAddToCart, showToast, onTo
         )}
         
         {/* Radius Controls Overlay */}
-        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-1 rounded-full border border-gray-200 shadow-sm flex items-center z-[1000]">
+        <div className="absolute top-4 left-4 bg-[var(--panel)]/90 backdrop-blur-sm p-1 rounded-full border border-[var(--border)] shadow-sm flex items-center z-[1000]">
           {[1, 5, 10, 20].map(r => (
             <button
               key={r}
               onClick={() => setMapRadius(r)}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${mapRadius === r ? 'bg-[#FF6B35] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${mapRadius === r ? 'bg-[#FF6B35] text-white' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'}`}
             >
               {r} km
             </button>
@@ -394,10 +394,10 @@ export default function NearbyPage({ onViewProduct, onAddToCart, showToast, onTo
       {/* Products Below Map */}
       <div>
         <div className="flex items-center gap-4 mb-6">
-          <h2 className="text-[24px] font-extrabold text-[#1F2937]">Found {filteredProducts.length} Products</h2>
+          <h2 className="text-[24px] font-extrabold text-[var(--text)]">Found {filteredProducts.length} Products</h2>
           {loading && <Loader2 className="w-5 h-5 text-[#FF6B35] animate-spin" />}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 lg:gap-8 pb-8">
           {filteredProducts.map(p => (
             <ProductCard 
               key={p.id} 

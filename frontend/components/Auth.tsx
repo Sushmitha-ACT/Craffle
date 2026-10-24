@@ -23,10 +23,10 @@ type RegisterTab = 'customer' | 'seller';
 
 const InputGroup = ({ label, type, value, onChange, placeholder = "", required = true, icon, className = "", rightElement }: any) => (
   <div className={`flex flex-col gap-1.5 ${className}`}>
-    <label className="text-[13px] font-bold text-[#8C4A1D] pl-1">{label}</label>
+    <label className="text-[13px] font-bold text-[var(--text)] pl-1">{label}</label>
     <div className="relative">
       {icon && (
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]">
           {icon}
         </div>
       )}
@@ -36,10 +36,10 @@ const InputGroup = ({ label, type, value, onChange, placeholder = "", required =
         onChange={onChange}
         required={required}
         placeholder={placeholder}
-        className={`w-full px-4 py-3 bg-white border border-[#F0E6D8] rounded-xl text-[14px] text-gray-800 focus:outline-none focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 transition-all ${icon ? 'pl-10' : ''} ${rightElement ? 'pr-10' : ''}`}
+        className={`w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-[14px] text-[var(--text)] placeholder-[var(--muted)] focus:outline-none focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 transition-all ${icon ? 'pl-10' : ''} ${rightElement ? 'pr-10' : ''}`}
       />
       {rightElement && (
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8C4A1D]">
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)]">
           {rightElement}
         </div>
       )}
@@ -210,6 +210,10 @@ export default function Auth({ onLoginSuccess, showToast }: AuthProps) {
       setError('Passwords do not match');
       return;
     }
+    if (bankAccount !== bankConfirmAccount) {
+      setError('Bank account numbers do not match');
+      return;
+    }
     setLoading(true);
     try {
       const userRes = await fetch('/api/auth/register', {
@@ -218,56 +222,41 @@ export default function Auth({ onLoginSuccess, showToast }: AuthProps) {
         body: JSON.stringify({ name, email, password, confirmPassword, role: UserRole.SELLER })
       });
       const userData = await userRes.json();
-      if (!userRes.ok && userData.error !== 'Email already registered') {
+      if (!userRes.ok) {
         throw new Error(userData.error || 'User creation failed');
       }
 
-      const usersRes = await fetch('/api/admin/users');
-      const users = await usersRes.json();
-      const newlyCreatedUser = users.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
-      if (!newlyCreatedUser) throw new Error('User registry failure. Please try again.');
+      const newlyCreatedUserId = userData?.user?.id || userData?.user?._id;
+      if (!newlyCreatedUserId) throw new Error('User registry failure. Please try again.');
 
-      let lat = mapLat;
-      let lng = mapLng;
-      
-      if (!lat || !lng) {
-        alert("Please select your address from the dropdown suggestions.");
-        setLoading(false);
-        return;
-      }
+      const lat = mapLat || 13.0827;
+      const lng = mapLng || 80.2707;
 
       const sellerRes = await fetch('/api/sellers/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: newlyCreatedUser.id,
-          businessName,
-          email, phone, address, 
+          userId: newlyCreatedUserId,
+          businessName: businessName || name,
+          email, 
+          phone, 
+          address: address || 'Local Address', 
           latitude: lat,
           longitude: lng,
-          category: 'Home Decor',
-          aadhaarReferenceId: aadharReferenceId,
-          bankReferenceId: bankReferenceId,
-          bankName: bankName,
-          bankAccountName: bankAccountName,
-          bankAccount: bankAccount,
-          ifsc: ifsc
+          category: 'Home Maker',
+          aadhaarNumber: aadharNumber,
+          bankAccount,
+          ifsc,
+          bankName: bankName || 'Bank',
+          bankAccountName: name
         })
       });
       
       const sellerData = await sellerRes.json();
-      if (!sellerRes.ok) throw new Error(sellerData.error || 'Seller profile creation failed');
-      if (sellerData.error) throw new Error(sellerData.error);
+      if (!sellerRes.ok) throw new Error(sellerData.error || 'Seller application submission failed');
 
-      setSuccess('Account created! Auto-logging you in...');
+      setSuccess('Your seller application has been submitted successfully. Your account is awaiting admin review.');
       
-      // Auto-verify email for sellers since they already did heavy KYC
-      await fetch('/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, bypassForSeller: true }) // We'll add this flag to backend if needed, or just let them skip it
-      }).catch(e => console.error(e));
-
       setTimeout(() => onLoginSuccess(userData.token, userData.user, sellerData.seller), 1000);
     } catch (err: any) {
       setError(err.message);
@@ -465,26 +454,26 @@ export default function Auth({ onLoginSuccess, showToast }: AuthProps) {
         className="w-full max-w-[560px]"
       >
         {mode === 'register' && (
-          <div className="flex gap-2 mb-6 bg-[#FFF4E6] p-1.5 rounded-2xl border border-[#F0E6D8]">
+          <div className="flex gap-2 mb-6 bg-[var(--bg-secondary)] p-1.5 rounded-2xl border border-[var(--border)]">
             <button
               onClick={() => setRegisterTab('customer')}
-              className={`flex-1 py-3 px-4 rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 transition-all ${registerTab === 'customer' ? 'bg-white text-[#FF6B35] shadow-sm' : 'text-[#8C4A1D] hover:bg-[#FFE8CC]'}`}
+              className={`flex-1 py-3 px-4 rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${registerTab === 'customer' ? 'bg-[#FF6B35] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--panel)]'}`}
             >
               <ShoppingBag className="w-4 h-4" /> Register as Customer
             </button>
             <button
               onClick={() => setRegisterTab('seller')}
-              className={`flex-1 py-3 px-4 rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 transition-all ${registerTab === 'seller' ? 'bg-white text-[#FF6B35] shadow-sm' : 'text-[#8C4A1D] hover:bg-[#FFE8CC]'}`}
+              className={`flex-1 py-3 px-4 rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${registerTab === 'seller' ? 'bg-[#FF6B35] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--panel)]'}`}
             >
               <Store className="w-4 h-4" /> Register as Seller
             </button>
           </div>
         )}
 
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-[#F0E6D8]">
+        <div className="bg-[var(--panel)] rounded-3xl p-6 sm:p-8 shadow-sm border border-[var(--border)] transition-colors duration-200">
           {mode === 'login' && (
             <form onSubmit={handleLogin} className="flex flex-col gap-5">
-              <h2 className="text-2xl font-bold text-[#3D2314] mb-2">Welcome Back</h2>
+              <h2 className="text-2xl font-bold text-[var(--text)] mb-2">Welcome Back</h2>
               <InputGroup label="Email Address" type="email" placeholder="you@example.com" value={email} onChange={(e: any) => setEmail(e.target.value)} />
               <InputGroup 
                 label="Password" 
@@ -492,12 +481,12 @@ export default function Auth({ onLoginSuccess, showToast }: AuthProps) {
                 placeholder="Enter your password" 
                 value={password} 
                 onChange={(e: any) => setPassword(e.target.value)} 
-                rightElement={<button type="button" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff className="w-5 h-5"/> : <Eye className="w-5 h-5"/>}</button>}
+                rightElement={<button type="button" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff className="w-5 h-5 text-[var(--muted)]"/> : <Eye className="w-5 h-5 text-[var(--muted)]"/>}</button>}
               />
               <div className="flex justify-end -mt-2">
                 <button type="button" onClick={() => setMode('forgot_password')} className="text-[#FF6B35] text-sm font-bold hover:underline">Forgot Password?</button>
               </div>
-              <button type="submit" disabled={loading} className="w-full bg-[#FF6B35] hover:bg-[#E65A2A] text-white font-bold py-3.5 rounded-xl transition-colors mt-2 flex items-center justify-center gap-2">
+              <button type="submit" disabled={loading} className="w-full bg-[#FF6B35] hover:bg-[#E65A2A] text-white font-bold py-3.5 rounded-xl transition-colors mt-2 flex items-center justify-center gap-2 cursor-pointer shadow-xs">
                 {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : 'Sign In →'}
               </button>
             </form>
@@ -569,84 +558,89 @@ export default function Auth({ onLoginSuccess, showToast }: AuthProps) {
                     )}
                   </div>
                   
-                  {/* KYC Verification Sections */}
+                  {/* Identity & Bank Information for Manual Review */}
                   <div className="my-2 border-t border-[#F0E6D8] pt-4">
-                    <h3 className="text-[#8C4A1D] font-extrabold text-[15px] mb-4">Aadhaar Verification</h3>
+                    <div className="flex justify-between items-center mb-1">
+                      <h3 className="text-[#8C4A1D] font-extrabold text-[15px]">Identity Information</h3>
+                      <span className="text-[11px] font-bold px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full">
+                        Manual Admin Review
+                      </span>
+                    </div>
+                    <p className="text-[12px] text-gray-500 mb-3">
+                      Please enter your 12-digit Aadhaar number. This will be securely reviewed by our team during application onboarding.
+                    </p>
                     <div className="flex flex-col gap-3">
-                      {aadharStep === 0 && (
-                        <div className="flex gap-2 items-end">
-                          <div className="flex-1">
-                            <InputGroup label="Aadhaar Number" type="text" placeholder="Enter 12-digit Aadhaar Number" value={aadharNumber} onChange={(e: any) => setAadharNumber(e.target.value)} />
-                          </div>
-                          <button type="button" onClick={handleVerifyAadhaarSend} disabled={aadharVerifying} className="bg-[#8C4A1D] text-white px-4 py-3 rounded-xl font-bold h-[46px] min-w-[100px] flex justify-center items-center">
-                            {aadharVerifying ? <RefreshCw className="w-5 h-5 animate-spin" /> : 'Verify'}
-                          </button>
-                        </div>
-                      )}
-                      
-                      {aadharStep === 1 && (
-                        <div className="flex gap-2 items-end">
-                          <div className="flex-1">
-                            <InputGroup label="Enter Aadhaar OTP" type="text" placeholder="6-digit OTP" value={aadharOtp} onChange={(e: any) => setAadharOtp(e.target.value)} />
-                          </div>
-                          <button type="button" onClick={handleVerifyAadhaarSubmit} disabled={aadharVerifying} className="bg-[#8C4A1D] text-white px-4 py-3 rounded-xl font-bold h-[46px] min-w-[100px] flex justify-center items-center">
-                            {aadharVerifying ? <RefreshCw className="w-5 h-5 animate-spin" /> : 'Submit'}
-                          </button>
-                        </div>
-                      )}
-
-                      {aadharStep === 2 && (
-                        <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-xl border border-green-200">
-                          <CheckCircle2 className="w-5 h-5" />
-                          <span className="font-bold text-sm">Aadhaar Verified</span>
-                          <span className="ml-auto text-xs opacity-70 text-gray-500">******{aadharNumber.slice(-4)}</span>
-                        </div>
-                      )}
+                      <InputGroup 
+                        label="Aadhaar Number" 
+                        type="text" 
+                        placeholder="Enter 12-digit Aadhaar Number" 
+                        value={aadharNumber} 
+                        onChange={(e: any) => setAadharNumber(e.target.value.replace(/\D/g, '').slice(0, 12))} 
+                      />
                     </div>
                   </div>
 
                   <div className="my-2 border-t border-[#F0E6D8] pt-4">
-                    <h3 className="text-[#8C4A1D] font-extrabold text-[15px] mb-4">Bank Account Verification</h3>
+                    <div className="flex justify-between items-center mb-1">
+                      <h3 className="text-[#8C4A1D] font-extrabold text-[15px]">Bank Account Information</h3>
+                      <span className="text-[11px] font-bold px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full">
+                        Manual Admin Review
+                      </span>
+                    </div>
+                    <p className="text-[12px] text-gray-500 mb-3">
+                      Payout account details for order settlements, verified by our administrator prior to account activation.
+                    </p>
                     <div className="flex flex-col gap-3">
-                      {bankStep === 0 ? (
-                        <>
-                          <InputGroup label="Bank Account Number" type="text" placeholder="Enter bank account number" value={bankAccount} onChange={(e: any) => setBankAccount(e.target.value)} />
-                          <InputGroup label="Confirm Bank Account" type="text" placeholder="Re-enter bank account number" value={bankConfirmAccount} onChange={(e: any) => setBankConfirmAccount(e.target.value)} />
-                          
-                          <div className="flex gap-2 items-end mt-2">
-                            <div className="flex-1">
-                              <InputGroup label="IFSC Code" type="text" placeholder="Enter IFSC Code" value={ifsc} onChange={(e: any) => setIfsc(e.target.value.toUpperCase())} />
-                            </div>
-                            <button type="button" onClick={handleVerifyBank} disabled={bankVerifying} className="bg-[#8C4A1D] text-white px-4 py-3 rounded-xl font-bold h-[46px] min-w-[100px] flex justify-center items-center">
-                              {bankVerifying ? <RefreshCw className="w-5 h-5 animate-spin" /> : 'Verify'}
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="flex flex-col gap-2 text-green-600 bg-green-50 p-4 rounded-xl border border-green-200">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="w-5 h-5" />
-                            <span className="font-bold text-sm">Bank Account Verified</span>
-                          </div>
-                          <div className="mt-2 text-sm text-gray-700 bg-white p-3 rounded-lg border border-green-100">
-                            <div className="flex justify-between mb-1">
-                              <span className="text-gray-500">Bank Name:</span>
-                              <span className="font-bold text-gray-800">{bankName}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-500">Account Holder:</span>
-                              <span className="font-bold text-gray-800">{bankAccountName || 'Masked/Verified'}</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                      <InputGroup 
+                        label="Bank Account Number" 
+                        type="text" 
+                        placeholder="Enter bank account number" 
+                        value={bankAccount} 
+                        onChange={(e: any) => setBankAccount(e.target.value.trim())} 
+                      />
+                      <InputGroup 
+                        label="Confirm Bank Account" 
+                        type="text" 
+                        placeholder="Re-enter bank account number" 
+                        value={bankConfirmAccount} 
+                        onChange={(e: any) => setBankConfirmAccount(e.target.value.trim())} 
+                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <InputGroup 
+                          label="Bank Name" 
+                          type="text" 
+                          placeholder="e.g. State Bank of India, HDFC" 
+                          value={bankName} 
+                          onChange={(e: any) => setBankName(e.target.value)} 
+                        />
+                        <InputGroup 
+                          label="IFSC Code" 
+                          type="text" 
+                          placeholder="e.g. SBIN0001234" 
+                          value={ifsc} 
+                          onChange={(e: any) => setIfsc(e.target.value.toUpperCase().trim())} 
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <button type="submit" disabled={loading || aadharStep !== 2 || bankStep !== 1} className="w-full bg-[#FF6B35] hover:bg-[#E65A2A] disabled:bg-[#FFB59A] disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-colors mt-2 flex items-center justify-center gap-2">
-                {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : 'Create Seller Account →'}
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 space-y-1">
+                <p className="font-bold flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" /> Application Notice
+                </p>
+                <p>
+                  Your seller account starts in <span className="font-bold">PENDING</span> status upon registration. A Craffle administrator will manually review your business, identity, and payout details before granting seller permissions.
+                </p>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={loading || !aadharNumber || aadharNumber.length !== 12 || !bankAccount || bankAccount !== bankConfirmAccount || !ifsc} 
+                className="w-full bg-[#FF6B35] hover:bg-[#E65A2A] disabled:bg-[#FFB59A] disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-colors mt-2 flex items-center justify-center gap-2"
+              >
+                {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : 'Submit Seller Application →'}
               </button>
             </form>
           )}

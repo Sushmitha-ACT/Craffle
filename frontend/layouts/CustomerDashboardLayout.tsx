@@ -20,12 +20,13 @@ interface CustomerDashboardLayoutProps {
   removeFromCart: (id: string) => void;
   onFilterChange: (filters: any) => void;
   topCreators: any[];
+  onOpenVisualSearch?: () => void;
 }
 
 export default function CustomerDashboardLayout({
   children, user, cart, wishlistIds, notificationCount, currentPage,
   onNavigate, onLogout, isCartOpen, setIsCartOpen, updateCartQuantity, removeFromCart,
-  onFilterChange, topCreators
+  onFilterChange, topCreators, onOpenVisualSearch
 }: CustomerDashboardLayoutProps) {
   
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -41,6 +42,7 @@ export default function CustomerDashboardLayout({
         onOpenCart={() => setIsCartOpen(true)}
         onLogout={onLogout}
         onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+        onOpenVisualSearch={onOpenVisualSearch}
       />
 
       <div className="flex flex-1">
@@ -67,7 +69,7 @@ export default function CustomerDashboardLayout({
         </div>
 
         {/* Main Content Area */}
-        <main className={`flex-1 min-h-screen bg-[var(--bg-secondary)] overflow-x-hidden transition-all duration-300 flex flex-col pt-[72px] min-w-0 ${isSidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-[250px]'} transition-colors duration-200`}>
+        <main className={`flex-1 min-h-screen bg-[var(--bg-secondary)] overflow-x-hidden transition-all duration-300 flex flex-col pt-[72px] min-w-0 ${isSidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-[230px]'} transition-colors duration-200`}>
           <div className="flex-1">
             {children}
           </div>

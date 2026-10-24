@@ -45,30 +45,37 @@ export default function WishlistPage({ userId, onViewProduct, onAddToCart, onTog
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 page-enter">
-      <div className="flex items-center gap-2 mb-6">
-        <Heart className="w-5 h-5" style={{ color: 'var(--danger)' }} />
-        <h1 className="text-xl font-bold" style={{ color: 'var(--text)' }}>My Wishlist</h1>
-        {items.length > 0 && (
-          <span className="badge badge-primary">{items.length} items</span>
-        )}
+    <div className="w-full px-6 lg:px-10 py-8 page-enter transition-colors duration-200">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-10 h-10 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center">
+          <Heart className="w-5 h-5 fill-red-500" />
+        </div>
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: 'var(--text)' }}>My Wishlist</h1>
+            {items.length > 0 && (
+              <span className="badge badge-primary text-xs font-bold px-3 py-1">{items.length} items</span>
+            )}
+          </div>
+          <p className="text-[15px] font-medium mt-0.5 text-[var(--text-secondary)]">Your saved products from local home creators</p>
+        </div>
       </div>
 
       {loading ? (
         <div className="product-grid">
           {[1,2,3,4].map(i => (
-            <div key={i} className="space-y-3">
-              <div className="skeleton h-48 rounded-xl" />
-              <div className="skeleton h-4 w-3/4 rounded" />
+            <div key={i} className="space-y-3 p-4 bg-[var(--panel)] rounded-2xl border border-[var(--border)]">
+              <div className="skeleton h-52 rounded-xl" />
+              <div className="skeleton h-5 w-3/4 rounded" />
               <div className="skeleton h-4 w-1/2 rounded" />
             </div>
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center py-20">
-          <Heart className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--muted)' }} />
-          <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text)' }}>Your wishlist is empty</h3>
-          <p className="text-sm" style={{ color: 'var(--muted)' }}>
+        <div className="text-center py-24 bg-[var(--panel)] rounded-3xl border border-[var(--border)] shadow-sm">
+          <Heart className="w-14 h-14 mx-auto mb-4 text-[var(--muted)]" />
+          <h3 className="text-xl font-bold mb-1.5 text-[var(--text)]">Your wishlist is empty</h3>
+          <p className="text-[15px] text-[var(--text-secondary)]">
             Browse products and tap the heart to save items you love
           </p>
         </div>
@@ -80,34 +87,35 @@ export default function WishlistPage({ userId, onViewProduct, onAddToCart, onTog
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="card-surface overflow-hidden group"
+              className="card-surface overflow-hidden group rounded-2xl border border-[var(--border)] shadow-sm hover:shadow-xl transition-all duration-300"
             >
-              <div className="relative h-44 overflow-hidden cursor-pointer" onClick={() => onViewProduct(product)}>
+              <div className="relative aspect-[4/3] min-h-[200px] overflow-hidden cursor-pointer bg-[var(--bg-secondary)]" onClick={() => onViewProduct(product)}>
                 <img src={product.images?.[0] || ''} alt={product.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <button
                   onClick={e => { e.stopPropagation(); removeFromWishlist(product.id); }}
-                  className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center bg-[var(--danger)] text-white hover:scale-110 transition-transform"
+                  className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center bg-[var(--panel)]/90 backdrop-blur-sm text-red-500 hover:scale-110 transition-transform shadow-md border border-[var(--border)]"
+                  title="Remove from wishlist"
                 >
-                  <Heart className="w-4 h-4 fill-white" />
+                  <Heart className="w-4.5 h-4.5 fill-red-500" />
                 </button>
               </div>
-              <div className="p-3.5">
-                <p className="text-[11px] font-medium mb-0.5" style={{ color: 'var(--primary)' }}>{product.sellerName}</p>
-                <h3 className="text-sm font-bold truncate" style={{ color: 'var(--text)' }}>{product.name}</h3>
+              <div className="p-5 flex flex-col gap-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-[#FF6B35]">{product.sellerName}</p>
+                <h3 className="text-[17px] font-bold text-[var(--text)] truncate">{product.name}</h3>
                 {product.rating !== undefined && product.rating > 0 && (
-                  <div className="flex items-center gap-1 mt-1">
-                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                    <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>{product.rating}</span>
+                  <div className="flex items-center gap-1.5 text-sm font-semibold">
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <span style={{ color: 'var(--text)' }}>{product.rating}</span>
                   </div>
                 )}
-                <div className="flex items-center justify-between mt-2.5">
-                  <span className="text-base font-extrabold" style={{ color: 'var(--text)' }}>₹{product.price}</span>
+                <div className="flex items-center justify-between mt-2 pt-3 border-t border-[var(--border)]">
+                  <span className="text-xl font-extrabold text-[#FF6B35]">₹{product.price}</span>
                   <button
                     onClick={() => { onAddToCart(product); removeFromWishlist(product.id); }}
-                    className="btn-primary text-xs py-1.5 px-3"
+                    className="btn-primary text-[14px] font-bold py-2 px-4 rounded-xl shadow-md shadow-orange-500/20"
                   >
-                    <ShoppingBag className="w-3.5 h-3.5" /> Add to Cart
+                    <ShoppingBag className="w-4 h-4" /> Add to Cart
                   </button>
                 </div>
               </div>
